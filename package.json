@@ -1,0 +1,14 @@
+{
+  "name": "gstand",
+  "module": "index.ts",
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@atproto/oauth-client-node": "^0.2.0"
+  }
+}
