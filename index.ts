@@ -1,26 +1,13 @@
-import { port } from "./env.ts";
-import { createClient } from "./auth/client.ts";
-import type { NodeOAuthClient } from "@atproto/oauth-client-node";
+import { port } from './env.ts';
+import { createClient } from './auth/client.ts';
+import type { NodeOAuthClient } from '@atproto/oauth-client-node';
+import Fastify from 'fastify';
 
 let oauthClient: NodeOAuthClient = await createClient();
 
-const server = Bun.serve({
-  port,
-  async fetch(req) {
-    const path = new URL(req.url).pathname;
-    const method = req.method;
-
-    if(path === "/" && method === "GET") return index();
-    else if (path === "/login" && method === "POST") return login(req);
-
-    return new Response("Page Not Found", { status: 404 });
-
-  }
-})
-
 // Templating like its 1999....please stop.
-const index = (): Response => {
-  let res = `
+const index = () => {
+  return `
     <!doctype html>
     <html>
       <head></head>
@@ -34,18 +21,26 @@ const index = (): Response => {
       </body>
     </html>
   `;
-  return new Response(res, {
-      headers: {
-        "Content-Type": "text/html",
-      }});
 }
 
-const login = async (req: Request): Promise<Response> => {
-  let data = await req.formData();
-  const handle: string = data.get("bskyid")?.toString() ?? "";
+const server = Fastify({ logger: true });
+server.register(require('@fastify/formbody'));
+server.register(require('@fastify/multipart'));
+
+server.get("/", async (req, res) => {console.log("home");res.type("html").send(index())});
+server.post("/login", async (req, res) => {
+  let data = await req.body as {bskyid: string};
+  const handle: string = data?.bskyid?.toString() ?? "";
+  console.log(handle);
   const url = await oauthClient.authorize(handle, {
     scope: "atproto transition:generic"
   })
   console.log(url);
-  return Response.redirect(url.toString());
+  res.redirect(url.toString());
+});
+try {
+  await server.listen({ port, host: '0.0.0.0' })
+} catch (err) {
+  server.log.error(err);
+  process.exit();
 }
