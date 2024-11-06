@@ -1,11 +1,11 @@
-import { NodeOAuthClient } from "@atproto/oauth-client-node";
-import { url, isPublicUrl } from "#/env";
+import { NodeOAuthClient } from '@atproto/oauth-client-node';
+import { url, isPublicUrl } from '../env.ts'; //'#/env.ts';
 import type {
   NodeSavedSession,
   NodeSavedSessionStore,
   NodeSavedState,
   NodeSavedStateStore,
-} from '@atproto/oauth-client-node'
+} from '@atproto/oauth-client-node';
 
 
 export const createClient = async () => {
