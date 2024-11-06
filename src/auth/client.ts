@@ -1,5 +1,5 @@
 import { NodeOAuthClient } from '@atproto/oauth-client-node';
-import { url, isPublicUrl } from '../env.ts'; //'#/env.ts';
+import { url, port, isPublicUrl } from '../env.ts'; //'#/env.ts';
 import type {
   NodeSavedSession,
   NodeSavedSessionStore,
@@ -15,9 +15,9 @@ export const createClient = async () => {
       client_name: "GStand",
       client_id: isPublicUrl
         ? `${url}/client-metadata.json`
-        : `http://localhost?redirect_uri=${enc(`http://127.0.0.1/oauth/callback`)}&scope=${enc('atproto transition:generic')}`,
+        : `http://localhost?redirect_uri=${enc(`http://127.0.0.1:${port}/oauth/callback`)}&scope=${enc('atproto transition:generic')}`,
       client_uri: url,
-      redirect_uris: [`${url}/oauth/callback`],
+      redirect_uris: [isPublicUrl ? `${url}/oauth/callback` : `http://127.0.0.1:${port}/oauth/callback`],
       scope: 'atproto transition:generic',
       grant_types: ['authorization_code', 'refresh_token'],
       response_types: ["code"],
