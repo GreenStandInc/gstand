@@ -3,13 +3,22 @@
 To install dependencies:
 
 ```bash
-bun install
+npm install
 ```
 
 To run:
 
 ```bash
-bun run index.ts
+npx tsx watch src/index.ts
+```
+To compile (without running):
+
+```bash
+npx tsup
 ```
 
-This project was created using `bun init` in bun v1.1.17. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
+To run (compiled js file):
+
+```bash
+node dist/index.cjs
+```
