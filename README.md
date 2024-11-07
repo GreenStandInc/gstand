@@ -9,16 +9,16 @@ npm install
 To run:
 
 ```bash
-npx tsx watch src/index.ts
+npm run dev
 ```
 To compile (without running):
 
 ```bash
-npx tsup
+npm run build
 ```
 
 To run (compiled js file):
 
 ```bash
-node dist/index.cjs
+npm run start
 ```
