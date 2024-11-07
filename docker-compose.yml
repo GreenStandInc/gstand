@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  gstand:
+    build:
+      context: .
+      target: gstand
+    container_name: gstand
+    ports:
+      - 3000:3000
