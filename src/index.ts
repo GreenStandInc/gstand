@@ -35,28 +35,28 @@ const run = async () => {
   let oauthClient: NodeOAuthClient = await createClient();
 
   const getSessionAgent = async (req: FastifyRequest, res: FastifyReply) => {
-      const session = await getIronSession<Session>(req.raw, res.raw, {
-        cookieName: "sid",
-        password: secret
-      });
-      if(!session.did) return null;
-      try {
-        const oauthSession = await oauthClient.restore(session.did);
-        return oauthSession ? new Agent(oauthSession) : null;
-      } catch (err) {
-        await session.destroy();
-        return null;
-      }
+    const session = await getIronSession<Session>(req.raw, res.raw, {
+      cookieName: "sid",
+      password: secret
+    });
+    if (!session.did) return null;
+    try {
+      const oauthSession = await oauthClient.restore(session.did);
+      return oauthSession ? new Agent(oauthSession) : null;
+    } catch (err) {
+      await session.destroy();
+      return null;
+    }
   }
 
   const server = Fastify({ logger: true });
   server.register(formbody);
   server.register(multipart);
 
-  server.get("/", async (req, res) => { 
+  server.get("/", async (req, res) => {
     const agent = await getSessionAgent(req, res);
 
-    if(agent) res.send("LOGGED IN!");
+    if (agent) res.send("LOGGED IN!");
     else res.type("html").send(index());
   });
 
@@ -68,6 +68,15 @@ const run = async () => {
     })
     res.redirect(url.toString());
   });
+
+  server.post("/logout", async (req, res) => {
+    const session = await getIronSession<Session>(req.raw, res.raw, {
+      cookieName: "sid",
+      password: secret
+    });
+    await session.destroy();
+    return res.redirect("/");
+  })
 
   server.get("/client-metadata.json", async (req, res) => { res.send(oauthClient.clientMetadata) })
 
