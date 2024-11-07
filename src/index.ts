@@ -1,7 +1,8 @@
 import { port, secret } from './env.ts';
 import { createClient } from './auth/client.ts';
-import { oauthClientCredentialsGrantTokenRequestSchema, type NodeOAuthClient } from '@atproto/oauth-client-node';
-import Fastify from 'fastify';
+import { type NodeOAuthClient } from '@atproto/oauth-client-node';
+import { Agent } from '@atproto/api';
+import Fastify, { type FastifyReply, type FastifyRequest } from 'fastify';
 import formbody from '@fastify/formbody';
 import multipart from '@fastify/multipart';
 import { getIronSession } from 'iron-session';
@@ -30,13 +31,35 @@ const index = () => {
 }
 
 const run = async () => {
+
   let oauthClient: NodeOAuthClient = await createClient();
+
+  const getSessionAgent = async (req: FastifyRequest, res: FastifyReply) => {
+      const session = await getIronSession<Session>(req.raw, res.raw, {
+        cookieName: "sid",
+        password: secret
+      });
+      if(!session.did) return null;
+      try {
+        const oauthSession = await oauthClient.restore(session.did);
+        return oauthSession ? new Agent(oauthSession) : null;
+      } catch (err) {
+        await session.destroy();
+        return null;
+      }
+  }
 
   const server = Fastify({ logger: true });
   server.register(formbody);
   server.register(multipart);
 
-  server.get("/", async (req, res) => { res.type("html").send(index()) });
+  server.get("/", async (req, res) => { 
+    const agent = await getSessionAgent(req, res);
+
+    if(agent) res.send("LOGGED IN!");
+    else res.type("html").send(index());
+  });
+
   server.post("/login", async (req, res) => {
     let data = await req.body as { bskyid: string };
     const handle: string = data?.bskyid?.toString() ?? "";
@@ -45,10 +68,12 @@ const run = async () => {
     })
     res.redirect(url.toString());
   });
+
   server.get("/client-metadata.json", async (req, res) => { res.send(oauthClient.clientMetadata) })
+
   server.get("/oauth/callback", async (req, res) => {
+    const params = new URLSearchParams(req.originalUrl.split("?")[1])
     try {
-      const params = new URLSearchParams(req.originalUrl.split("?")[1])
       const { session } = await oauthClient.callback(params);
       const clientSession = await getIronSession<Session>(req.raw, res.raw, {
         cookieName: "sid",
