@@ -7,23 +7,19 @@ import assert from 'node:assert';
 import { Hono, type Context } from 'hono';
 import { logger } from 'hono/logger';
 import { serve } from '@hono/node-server';
+import { Fragment, type FC } from 'hono/jsx';
+import { html } from 'hono/html';
 
 type Session = { did: string }
 
-// Templating like its 1999....please stop.
-const index = () => {
-  return `
-    <!doctype html>
+const Page = ({ children }: { children: FC }) => {
+  return html`
+    <!DOCTYPE html>
     <html>
-      <head></head>
-      <body>
-        <form action="/login" method="post">
-          <label for="bskyid">
-            BlueSky ID: <input type="text" name="bskyid">
-          </label>
-          <input type="submit" value="Log In">
-        </form>
-      </body>
+      <head>
+        <title>GStand</title>
+      </head>
+      <body>${children}</body>
     </html>
   `;
 }
@@ -54,7 +50,16 @@ const run = async () => {
     const agent = await getSessionAgent(c);
 
     if (agent) return c.text("LOGGED IN!");
-    else return c.html(index());
+    else return c.html(
+      <Page>
+        <form action="/login" method="post">
+          <label for="bskyid">
+            BlueSky ID: <input type="text" name="bskyid" />
+          </label>
+          <input type="submit" value="Log In" />
+        </form>
+      </Page>
+    );
   });
 
   server.post("/login", async (c) => {
@@ -76,7 +81,7 @@ const run = async () => {
   })
 
   server.get("/client-metadata.json", async (c) => {
-    return c.json(oauthClient.clientMetadata) 
+    return c.json(oauthClient.clientMetadata)
   });
 
   server.get("/oauth/callback", async (c) => {
@@ -98,7 +103,7 @@ const run = async () => {
     }
   });
 
-  serve({fetch: server.fetch, port});
+  serve({ fetch: server.fetch, port });
 
 }
 
