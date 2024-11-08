@@ -3,7 +3,7 @@
   "module": "index.tsx",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch --clear-screen=false src/index.tsx | pino-pretty",
+    "dev": "tsx watch --clear-screen=false src/index.tsx",
     "build": "tsup",
     "start": "node dist/index.cjs"
   },
@@ -17,9 +17,8 @@
   "dependencies": {
     "@atproto/api": "^0.13.14",
     "@atproto/oauth-client-node": "^0.2.0",
-    "@fastify/formbody": "^8.0.1",
-    "@fastify/multipart": "^9.0.1",
-    "fastify": "^5.1.0",
+    "@hono/node-server": "^1.13.5",
+    "hono": "^4.6.9",
     "iron-session": "^8.0.3",
     "kysely": "^0.27.4"
   },
