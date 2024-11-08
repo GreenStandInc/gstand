@@ -1,4 +1,4 @@
-import { port, secret } from './env.ts';
+import { dbDatabase, dbPath, dbHost, dbPassword, dbPort, dbType, dbUsername, port, secret } from './env.ts';
 import { createClient } from './auth/client.ts';
 import { type NodeOAuthClient } from '@atproto/oauth-client-node';
 import { Agent } from '@atproto/api';
@@ -9,10 +9,11 @@ import { logger } from 'hono/logger';
 import { serve } from '@hono/node-server';
 import { Fragment, type FC } from 'hono/jsx';
 import { html } from 'hono/html';
+import { createPostgresDb, createSQLiteDb } from 'db.ts';
 
 type Session = { did: string }
 
-const Page = ({ children }: { children: FC }) => {
+const Page = ({ children }: any) => {
   return html`
     <!DOCTYPE html>
     <html>
@@ -26,7 +27,18 @@ const Page = ({ children }: { children: FC }) => {
 
 const run = async () => {
 
-  let oauthClient: NodeOAuthClient = await createClient();
+  const db = dbType === "sqlite" ?
+    createSQLiteDb(dbPath) :
+    createPostgresDb({
+      database: dbDatabase,
+      host: dbHost,
+      port: dbPort,
+      user: dbUsername,
+      password: dbPassword,
+      max: 10 // Probably doesn't matter.
+    });
+
+  const oauthClient: NodeOAuthClient = await createClient(db);
 
   const getSessionAgent = async (c: Context) => {
     const session = await getIronSession<Session>(c.req.raw, c.res, {
@@ -44,6 +56,7 @@ const run = async () => {
   }
 
   const server = new Hono();
+  // Uncomment to print all GET/SET requests to stdout.
   //server.use(logger());
 
   server.get("/", async (c) => {
@@ -63,7 +76,7 @@ const run = async () => {
   });
 
   server.post("/login", async (c) => {
-    let data = await c.req.formData();
+    const data = await c.req.formData();
     const handle: string = data.get('bskyid')?.toString() ?? "";
     const url = await oauthClient.authorize(handle, {
       scope: "atproto transition:generic"

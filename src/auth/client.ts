@@ -6,10 +6,11 @@ import type {
   NodeSavedState,
   NodeSavedStateStore,
 } from '@atproto/oauth-client-node';
+import type { Database } from '../db.ts';
 
 
-export const createClient = async () => {
-  let enc = encodeURIComponent;
+export const createClient = async (db: Database) => {
+  const enc = encodeURIComponent;
   return new NodeOAuthClient({
     clientMetadata: {
       client_name: "GStand",
@@ -25,29 +26,51 @@ export const createClient = async () => {
       token_endpoint_auth_method: "none",
       dpop_bound_access_tokens: true,
     },
-    stateStore: new StateStore(),
-    sessionStore: new SessionStore(),
+    stateStore: new StateStore(db),
+    sessionStore: new SessionStore(db),
   })
 }
 
 // TODO, don't do it in memory!
 class StateStore implements NodeSavedStateStore {
-  db: Map<String, NodeSavedState>;
-  constructor () {
-    this.db = new Map();
+  constructor(private db: Database) { }
+  async get(key: string): Promise<NodeSavedState | undefined> {
+    const res = await this.db.selectFrom("auth_state")
+      .selectAll().where("key", "=", key)
+      .executeTakeFirst();
+    if (res) return JSON.parse(res.state) as NodeSavedState;
+    else return;
   }
-  async get(key: string): Promise<NodeSavedState | undefined> { return this.db.get(key); }
-  async set(key: string, val: NodeSavedState) { this.db.set(key, val)}
-  async del(key: string) { this.db.delete(key)}
+  async set(key: string, val: NodeSavedState) {
+    const state = JSON.stringify(val);
+    await this.db.insertInto("auth_state")
+      .values({ key, state })
+      .onConflict((oc) => oc.doUpdateSet({ state }))
+      .execute();
+  }
+  async del(key: string) {
+    await this.db.deleteFrom("auth_state").where("key", "=", key).execute();
+  }
 }
 
 // TODO, don't do it in memory!
 class SessionStore implements NodeSavedSessionStore {
-  db: Map<String, NodeSavedSession>;
-  constructor () {
-    this.db = new Map();
+  constructor(private db: Database) { }
+  async get(key: string): Promise<NodeSavedSession | undefined> {
+    const res = await this.db.selectFrom("auth_session")
+      .selectAll().where("key", "=", key)
+      .executeTakeFirst();
+    if (res) return JSON.parse(res.session) as NodeSavedSession;
+    else return;
   }
-  async get(key: string): Promise<NodeSavedSession | undefined> { return this.db.get(key); }
-  async set(key: string, val: NodeSavedSession) { this.db.set(key, val)}
-  async del(key: string) { this.db.delete(key) }
+  async set(key: string, val: NodeSavedSession) {
+    const session = JSON.stringify(val);
+    await this.db.insertInto("auth_session")
+      .values({ key, session })
+      .onConflict((oc) => oc.doUpdateSet({ session }))
+      .execute();
+  }
+  async del(key: string) {
+    await this.db.deleteFrom("auth_session").where("key", "=", key).execute();
+  }
 }
