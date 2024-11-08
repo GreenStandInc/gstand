@@ -1,9 +1,9 @@
 {
   "name": "gstand",
-  "module": "index.ts",
+  "module": "index.tsx",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch --clear-screen=false src/index.ts | pino-pretty",
+    "dev": "tsx watch --clear-screen=false src/index.tsx | pino-pretty",
     "build": "tsup",
     "start": "node dist/index.cjs"
   },
