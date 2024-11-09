@@ -9,7 +9,7 @@ import { logger } from 'hono/logger';
 import { serve } from '@hono/node-server';
 import { Fragment, type FC } from 'hono/jsx';
 import { html } from 'hono/html';
-import { createPostgresDb, createSQLiteDb } from 'db.ts';
+import { createPostgresDb, createSQLiteDb, migrateToLatest } from 'db.ts';
 
 type Session = { did: string }
 
@@ -37,6 +37,7 @@ const run = async () => {
       password: dbPassword,
       max: 10 // Probably doesn't matter.
     });
+  migrateToLatest(db);
 
   const oauthClient: NodeOAuthClient = await createClient(db);
 
