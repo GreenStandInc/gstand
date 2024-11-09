@@ -10,6 +10,8 @@ import { serve } from '@hono/node-server';
 import { Fragment, type FC } from 'hono/jsx';
 import { html } from 'hono/html';
 import { createPostgresDb, createSQLiteDb, migrateToLatest } from 'db.ts';
+import { serveStatic } from '@hono/node-server/serve-static';
+import path from 'node:path';
 
 type Session = { did: string }
 
@@ -19,6 +21,7 @@ const Page = ({ children }: any) => {
     <html>
       <head>
         <title>GStand</title>
+        <link rel="stylesheet" href="/public/style.css" />
       </head>
       <body>${children}</body>
     </html>
@@ -58,7 +61,13 @@ const run = async () => {
 
   const server = new Hono();
   // Uncomment to print all GET/SET requests to stdout.
-  //server.use(logger());
+  // server.use(logger());
+
+  server.use("/public/style.css", serveStatic({
+    path: path.relative(
+      process.cwd(),
+      path.join(import.meta.dirname, "pages", "public", "style.css")),
+  }));
 
   server.get("/", async (c) => {
     const agent = await getSessionAgent(c);

@@ -1,6 +1,8 @@
 import { Kysely, Migrator, PostgresDialect, SqliteDialect, type Migration, type MigrationProvider } from "kysely"
-import { Pool, type PoolConfig } from 'pg';
+import pg, { type PoolConfig } from 'pg';
 import SQLiteDb from 'better-sqlite3';
+
+const { Pool } = pg;
 
 export type DatabaseSchema = {
   auth_session: AuthSession,
