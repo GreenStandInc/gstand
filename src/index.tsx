@@ -1,4 +1,4 @@
-import { dbDatabase, dbPath, dbHost, dbPassword, dbPort, dbType, dbUsername, port, secret } from './env.ts';
+import { dbDatabase, dbPath, dbHost, dbPassword, dbPort, dbType, dbUsername, port, secret, loglevel } from './env.ts';
 import { createClient } from './auth/client.ts';
 import { type NodeOAuthClient } from '@atproto/oauth-client-node';
 import { Agent } from '@atproto/api';
@@ -60,8 +60,9 @@ const run = async () => {
   }
 
   const server = new Hono();
-  // Uncomment to print all GET/SET requests to stdout.
-  // server.use(logger());
+  if(loglevel !== "none") {
+    server.use(logger());
+  }
 
   server.use("/public/style.css", serveStatic({
     path: path.relative(

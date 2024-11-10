@@ -16,4 +16,6 @@ export const dbUsername: string = process.env[PREFIX+"DB_USERNAME"] ?? "psql";
 export const dbPassword: string = process.env[PREFIX+"DB_PASSWORD"] ?? "";
 export const dbDatabase: string = process.env[PREFIX+"DB_DATABASE"] ?? "gstand";
 
-export const isPublicUrl: boolean = Boolean(process.env[PREFIX+"URL"])
+export const loglevel: string = process.env[PREFIX+"LOG_LEVEL"] ?? "none";
+
+export const isPublicUrl: boolean = Boolean(process.env[PREFIX+"HOST"] || process.env[PREFIX+"URL"])
