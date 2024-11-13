@@ -27,6 +27,6 @@
     },
     "outDir": "dist"
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*","client/**/*"],
   "exclude": ["node_modules"]
 }

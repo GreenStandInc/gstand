@@ -15,19 +15,6 @@ import path from 'node:path';
 
 type Session = { did: string }
 
-const Page = ({ children }: any) => {
-  return html`
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <title>GStand</title>
-        <link rel="stylesheet" href="/public/style.css" />
-      </head>
-      <body>${children}</body>
-    </html>
-  `;
-}
-
 const run = async () => {
 
   const db = dbType === "sqlite" ?
@@ -64,26 +51,19 @@ const run = async () => {
     server.use(logger());
   }
 
-  server.use("/public/style.css", serveStatic({
-    path: path.relative(
-      process.cwd(),
-      path.join(import.meta.dirname, "pages", "public", "style.css")),
+  server.use("/assets/*", serveStatic({
+    root: "./client/dist",
   }));
 
-  server.get("/", async (c) => {
+  server.use("/", serveStatic({
+    path: "./client/dist/index.html",
+  }))
+
+  server.get("/testIsLoggedIn", async (c) => {
     const agent = await getSessionAgent(c);
 
     if (agent) return c.text("LOGGED IN!");
-    else return c.html(
-      <Page>
-        <form action="/login" method="post">
-          <label for="bskyid">
-            BlueSky ID: <input type="text" name="bskyid" />
-          </label>
-          <input type="submit" value="Log In" />
-        </form>
-      </Page>
-    );
+    else return c.text("Logged Out!")
   });
 
   server.post("/login", async (c) => {
