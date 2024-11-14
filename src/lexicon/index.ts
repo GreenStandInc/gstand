@@ -1,114 +1,109 @@
 /**
  * GENERATED CODE - DO NOT MODIFY
  */
-import { XrpcClient, FetchHandler, FetchHandlerOptions } from '@atproto/xrpc'
+import {
+  createServer as createXrpcServer,
+  Server as XrpcServer,
+  Options as XrpcOptions,
+  AuthVerifier,
+  StreamAuthVerifier,
+} from '@atproto/xrpc-server'
 import { schemas } from './lexicons'
-import { CID } from 'multiformats/cid'
-import * as AppBskyActorProfile from './types/app/bsky/actor/profile'
 
-export * as AppBskyActorProfile from './types/app/bsky/actor/profile'
+export function createServer(options?: XrpcOptions): Server {
+  return new Server(options)
+}
 
-export class AtpBaseClient extends XrpcClient {
+export class Server {
+  xrpc: XrpcServer
   app: AppNS
+  com: ComNS
 
-  constructor(options: FetchHandler | FetchHandlerOptions) {
-    super(options, schemas)
+  constructor(options?: XrpcOptions) {
+    this.xrpc = createXrpcServer(schemas, options)
     this.app = new AppNS(this)
-  }
-
-  /** @deprecated use `this` instead */
-  get xrpc(): XrpcClient {
-    return this
+    this.com = new ComNS(this)
   }
 }
 
 export class AppNS {
-  _client: XrpcClient
+  _server: Server
   bsky: AppBskyNS
 
-  constructor(client: XrpcClient) {
-    this._client = client
-    this.bsky = new AppBskyNS(client)
+  constructor(server: Server) {
+    this._server = server
+    this.bsky = new AppBskyNS(server)
   }
 }
 
 export class AppBskyNS {
-  _client: XrpcClient
+  _server: Server
   actor: AppBskyActorNS
 
-  constructor(client: XrpcClient) {
-    this._client = client
-    this.actor = new AppBskyActorNS(client)
+  constructor(server: Server) {
+    this._server = server
+    this.actor = new AppBskyActorNS(server)
   }
 }
 
 export class AppBskyActorNS {
-  _client: XrpcClient
-  profile: ProfileRecord
+  _server: Server
 
-  constructor(client: XrpcClient) {
-    this._client = client
-    this.profile = new ProfileRecord(client)
+  constructor(server: Server) {
+    this._server = server
   }
 }
 
-export class ProfileRecord {
-  _client: XrpcClient
+export class ComNS {
+  _server: Server
+  atproto: ComAtprotoNS
 
-  constructor(client: XrpcClient) {
-    this._client = client
-  }
-
-  async list(
-    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
-  ): Promise<{
-    cursor?: string
-    records: { uri: string; value: AppBskyActorProfile.Record }[]
-  }> {
-    const res = await this._client.call('com.atproto.repo.listRecords', {
-      collection: 'app.bsky.actor.profile',
-      ...params,
-    })
-    return res.data
-  }
-
-  async get(
-    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
-  ): Promise<{ uri: string; cid: string; value: AppBskyActorProfile.Record }> {
-    const res = await this._client.call('com.atproto.repo.getRecord', {
-      collection: 'app.bsky.actor.profile',
-      ...params,
-    })
-    return res.data
-  }
-
-  async create(
-    params: Omit<
-      ComAtprotoRepoCreateRecord.InputSchema,
-      'collection' | 'record'
-    >,
-    record: AppBskyActorProfile.Record,
-    headers?: Record<string, string>,
-  ): Promise<{ uri: string; cid: string }> {
-    record.$type = 'app.bsky.actor.profile'
-    const res = await this._client.call(
-      'com.atproto.repo.createRecord',
-      undefined,
-      { collection: 'app.bsky.actor.profile', rkey: 'self', ...params, record },
-      { encoding: 'application/json', headers },
-    )
-    return res.data
-  }
-
-  async delete(
-    params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
-    headers?: Record<string, string>,
-  ): Promise<void> {
-    await this._client.call(
-      'com.atproto.repo.deleteRecord',
-      undefined,
-      { collection: 'app.bsky.actor.profile', ...params },
-      { headers },
-    )
+  constructor(server: Server) {
+    this._server = server
+    this.atproto = new ComAtprotoNS(server)
   }
 }
+
+export class ComAtprotoNS {
+  _server: Server
+  repo: ComAtprotoRepoNS
+
+  constructor(server: Server) {
+    this._server = server
+    this.repo = new ComAtprotoRepoNS(server)
+  }
+}
+
+export class ComAtprotoRepoNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+}
+
+type SharedRateLimitOpts<T> = {
+  name: string
+  calcKey?: (ctx: T) => string
+  calcPoints?: (ctx: T) => number
+}
+type RouteRateLimitOpts<T> = {
+  durationMs: number
+  points: number
+  calcKey?: (ctx: T) => string
+  calcPoints?: (ctx: T) => number
+}
+type HandlerOpts = { blobLimit?: number }
+type HandlerRateLimitOpts<T> = SharedRateLimitOpts<T> | RouteRateLimitOpts<T>
+type ConfigOf<Auth, Handler, ReqCtx> =
+  | Handler
+  | {
+      auth?: Auth
+      opts?: HandlerOpts
+      rateLimit?: HandlerRateLimitOpts<ReqCtx> | HandlerRateLimitOpts<ReqCtx>[]
+      handler: Handler
+    }
+type ExtractAuth<AV extends AuthVerifier | StreamAuthVerifier> = Extract<
+  Awaited<ReturnType<AV>>,
+  { credentials: unknown }
+>
