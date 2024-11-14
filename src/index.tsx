@@ -59,11 +59,17 @@ const run = async () => {
     path: "./client/dist/index.html",
   }))
 
-  server.get("/testIsLoggedIn", async (c) => {
+  server.get("/main", async (c) => {
     const agent = await getSessionAgent(c);
 
-    if (agent) return c.text("LOGGED IN!");
-    else return c.text("Logged Out!")
+    if(!agent) return c.json({});
+
+    const { data: profileRecord } = await agent.com.atproto.repo.getRecord({
+      repo: agent.assertDid,
+      collection: 'app.bsky.actor.profile',
+      rkey: 'self'
+    });
+
   });
 
   server.post("/login", async (c) => {

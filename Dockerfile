@@ -8,7 +8,11 @@ RUN npm ci
 
 COPY . .
 
-RUN npm run ui:build && npm run build && npm prune --omit=dev
+RUN npm run ui:lexgen && \
+    npm run lexgen && \
+    npm run ui:build && \
+    npm run build && \
+    npm prune --omit=dev
 
 FROM node:22 AS gstand
 
