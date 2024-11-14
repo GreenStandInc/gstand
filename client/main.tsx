@@ -1,19 +1,24 @@
 import { useState } from "hono/jsx";
 import { render } from "hono/jsx/dom";
 
-function Login() {
+const Login = () => {
   const [count, setCount] = useState(0);
   return (
-    <form action="/login" method="post">
-      <label for="bskyid">
-        BlueSky ID: <input type="text" name="bskyid" />
-      </label>
-      <input type="submit" value="Log In" />
-    </form>
+    <div>
+      <button type="button" onClick={() => setCount(count+1)}>
+        Value: {count}
+      </button>
+      <form action="/login" method="post">
+        <label for="bskyid">
+          BlueSky ID: <input type="text" name="bskyid" />
+        </label>
+        <input type="submit" value="Log In" />
+      </form>
+    </div>
   );
 }
 
-function App() {
+const App = () => {
   return <Login />;
 }
 

@@ -1,13 +1,12 @@
 import { NodeOAuthClient } from '@atproto/oauth-client-node';
-import { url, port, isPublicUrl } from '../env.ts'; //'#/env.ts';
+import { url, port, isPublicUrl } from '#/env.ts';
 import type {
   NodeSavedSession,
   NodeSavedSessionStore,
   NodeSavedState,
   NodeSavedStateStore,
 } from '@atproto/oauth-client-node';
-import type { Database } from '../db.ts';
-
+import type { Database } from '#/db.ts';
 
 export const createClient = async (db: Database) => {
   const enc = encodeURIComponent;

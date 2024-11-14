@@ -21,9 +21,10 @@
     "noUnusedParameters": false,
     "noPropertyAccessFromIndexSignature": false,
 
-    "baseUrl": "src",
+    "baseUrl": ".",
     "paths": {
-      "#/*": ["src/*"]
+      "#/*": ["src/*"],
+      "##/*": ["client/*"]
     },
     "outDir": "dist"
   },

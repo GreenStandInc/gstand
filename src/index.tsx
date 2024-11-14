@@ -9,7 +9,7 @@ import { logger } from 'hono/logger';
 import { serve } from '@hono/node-server';
 import { Fragment, type FC } from 'hono/jsx';
 import { html } from 'hono/html';
-import { createPostgresDb, createSQLiteDb, migrateToLatest } from 'db.ts';
+import { createPostgresDb, createSQLiteDb, migrateToLatest } from './db.ts';
 import { serveStatic } from '@hono/node-server/serve-static';
 import path from 'node:path';
 
