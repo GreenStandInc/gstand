@@ -61,7 +61,6 @@ server.use("/", serveStatic({
 
 let routes = server.get("/api/profile", async (c) => {
   const agent = await getSessionAgent(c);
-
   if (!agent) return c.json({});
 
   const { data: profileRecord } = await agent.com.atproto.repo.getRecord({
