@@ -28,11 +28,31 @@ export class Server {
 
 export class AppNS {
   _server: Server
+  gstand: AppGstandNS
   bsky: AppBskyNS
 
   constructor(server: Server) {
     this._server = server
+    this.gstand = new AppGstandNS(server)
     this.bsky = new AppBskyNS(server)
+  }
+}
+
+export class AppGstandNS {
+  _server: Server
+  store: AppGstandStoreNS
+
+  constructor(server: Server) {
+    this._server = server
+    this.store = new AppGstandStoreNS(server)
+  }
+}
+
+export class AppGstandStoreNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
   }
 }
 

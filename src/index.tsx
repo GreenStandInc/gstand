@@ -12,6 +12,8 @@ import { html } from 'hono/html';
 import { createPostgresDb, createSQLiteDb, migrateToLatest } from './db.ts';
 import { serveStatic } from '@hono/node-server/serve-static';
 import path from 'node:path';
+import * as Profile from './lexicon/types/app/bsky/actor/profile.ts';
+import { profile } from 'node:console';
 
 type Session = { did: string }
 
@@ -47,7 +49,7 @@ const run = async () => {
   }
 
   const server = new Hono();
-  if(loglevel !== "none") {
+  if (loglevel !== "none") {
     server.use(logger());
   }
 
@@ -62,14 +64,18 @@ const run = async () => {
   server.get("/main", async (c) => {
     const agent = await getSessionAgent(c);
 
-    if(!agent) return c.json({});
+    if (!agent) return c.json({});
 
     const { data: profileRecord } = await agent.com.atproto.repo.getRecord({
       repo: agent.assertDid,
       collection: 'app.bsky.actor.profile',
       rkey: 'self'
     });
+    const profile = Profile.isRecord(profileRecord.value) &&
+      Profile.validateRecord(profileRecord.value).success
+      ? profileRecord.value : {};
 
+    return c.json(profile);
   });
 
   server.post("/login", async (c) => {

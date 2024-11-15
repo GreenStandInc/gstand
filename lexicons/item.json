@@ -1,0 +1,28 @@
+{
+  "lexicon": 1,
+  "id": "app.gstand.store.item",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "A declaration of a GStand shop item",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The item's name"
+          },
+          "payment": {
+            "type": "array",
+            "description": "Prices for the item",
+            "items": {
+              "type": "ref",
+              "ref": "app.gstand.store.payment"
+            }
+          }
+        }
+      }
+    }
+  }
+}
