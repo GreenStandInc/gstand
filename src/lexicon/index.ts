@@ -17,42 +17,20 @@ export function createServer(options?: XrpcOptions): Server {
 export class Server {
   xrpc: XrpcServer
   app: AppNS
-  com: ComNS
 
   constructor(options?: XrpcOptions) {
     this.xrpc = createXrpcServer(schemas, options)
     this.app = new AppNS(this)
-    this.com = new ComNS(this)
   }
 }
 
 export class AppNS {
   _server: Server
-  bsky: AppBskyNS
   gstand: AppGstandNS
 
   constructor(server: Server) {
     this._server = server
-    this.bsky = new AppBskyNS(server)
     this.gstand = new AppGstandNS(server)
-  }
-}
-
-export class AppBskyNS {
-  _server: Server
-  actor: AppBskyActorNS
-
-  constructor(server: Server) {
-    this._server = server
-    this.actor = new AppBskyActorNS(server)
-  }
-}
-
-export class AppBskyActorNS {
-  _server: Server
-
-  constructor(server: Server) {
-    this._server = server
   }
 }
 
@@ -67,34 +45,6 @@ export class AppGstandNS {
 }
 
 export class AppGstandStoreNS {
-  _server: Server
-
-  constructor(server: Server) {
-    this._server = server
-  }
-}
-
-export class ComNS {
-  _server: Server
-  atproto: ComAtprotoNS
-
-  constructor(server: Server) {
-    this._server = server
-    this.atproto = new ComAtprotoNS(server)
-  }
-}
-
-export class ComAtprotoNS {
-  _server: Server
-  repo: ComAtprotoRepoNS
-
-  constructor(server: Server) {
-    this._server = server
-    this.repo = new ComAtprotoRepoNS(server)
-  }
-}
-
-export class ComAtprotoRepoNS {
   _server: Server
 
   constructor(server: Server) {

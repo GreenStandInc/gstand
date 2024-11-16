@@ -2,45 +2,54 @@ import { useEffect, useState } from "hono/jsx";
 import { render } from "hono/jsx/dom";
 import { hc } from 'hono/client';
 import type { AppType } from "#/index";
-import * as Profile from "./lexicon/types/app/bsky/actor/profile";
+import { type ProfileViewDetailed } from "@atproto/api/dist/client/types/app/bsky/actor/defs";
 
 const client = hc<AppType>("/");
 
-const LoginFooter = ({ profile }: { profile: Profile.Record }) => {
+const LoginFooter = ({ profile }: {
+  profile: ProfileViewDetailed | undefined,
+}) => {
   return (
-    <footer className="flex w-screen h-20 bg-green-800 text-white text-3xl shadow-2xl justify-end items-center">
-      {
-        Profile.isRecord(profile)
-          ? <div>
-            Welcome {profile.displayName}!
-          </div>
-          : <form action="/login" method="post">
-            <label for="bskyid">
-              BlueSky ID: <input className="text-black" type="text" name="bskyid" />
-            </label>
-            <input type="submit" value="Log In" />
-          </form>
-      }
+    <footer className="flex w-screen h-20 bg-green-800 text-white text-3xl shadow-2xl items-center">
+      <div className="flex container justify-end">
+        {
+          profile === undefined ?
+            <form action="/login" method="post">
+              <label for="bskyid">
+                BlueSky ID: <input className="py-1 text-black" type="text" name="bskyid" />
+              </label>
+              <input className="m-2 px-2 py-1 rounded-full bg-blue-500 hover:bg-blue-700 focus:outline-none focus:ring focus:ring-blue-300"
+                type="submit" value="Log In" />
+            </form>
+            :
+            <div className="flex">
+              Welcome {profile.displayName}! <img className="h-16" src={profile.avatar} />
+            </div>
+        }
+      </div>
     </footer>
   );
 }
 
 const App = () => {
-  const [profile, setProfile] = useState<Profile.Record>({});
+  const [profile, setProfile] = useState<ProfileViewDetailed>();
+  const [avatar, setAvatar] = useState<Uint8Array>();
   useEffect(() => {
     (async () => {
-      let p = await client.api.profile.$get();
-      if (p.ok) return await p.json();
-      else return {}
-    })().then(setProfile);
+      const pRes = await client.api.profile.$get();
+      if (!pRes.ok) return;
+
+      const p: ProfileViewDetailed = await pRes.json();
+      setProfile(p);
+    })()
   }, [])
   return (
-    <div>
-      <main>
+    <div className="flex flex-col h-screen">
+      <main className="mb-auto flex-grow">
         <h1 class="text-3xl font-bold underline">
           Hello world!
         </h1>
-        {profile.displayName}
+        {profile?.displayName}
         <p />
         Lorem ipsum odor amet, consectetuer adipiscing elit. Aliquet amet per turpis placerat maximus quam. Faucibus dolor nisl volutpat erat mattis habitant. Urna habitant congue ac aenean imperdiet consequat quisque. Viverra dapibus quis; egestas lacinia posuere vulputate. Varius tempus integer habitant vehicula lobortis quis; ligula molestie bibendum. Varius viverra varius posuere proin lacinia; accumsan curae mauris adipiscing. Eros inceptos fermentum ex integer fames purus.
         <p />

@@ -12,8 +12,9 @@ import { html } from 'hono/html';
 import { createPostgresDb, createSQLiteDb, migrateToLatest } from './db.ts';
 import { serveStatic } from '@hono/node-server/serve-static';
 import path from 'node:path';
-import * as Profile from './lexicon/types/app/bsky/actor/profile.ts';
-import { profile } from 'node:console';
+import { zValidator } from '@hono/zod-validator';
+import { z } from 'zod';
+import { HTTPException } from 'hono/http-exception';
 
 type Session = { did: string }
 
@@ -61,19 +62,11 @@ server.use("/", serveStatic({
 
 let routes = server.get("/api/profile", async (c) => {
   const agent = await getSessionAgent(c);
-  if (!agent) return c.json({});
-
-  const { data: profileRecord } = await agent.com.atproto.repo.getRecord({
-    repo: agent.assertDid,
-    collection: 'app.bsky.actor.profile',
-    rkey: 'self'
-  });
-  const profile = Profile.isRecord(profileRecord.value) &&
-    Profile.validateRecord(profileRecord.value).success
-    ? profileRecord.value : {};
-
-  return c.json(profile);
-});
+  if (!agent) throw new HTTPException(401, { message: "Not logged in" });
+  const { success, data } = await agent.getProfile({ actor: agent.assertDid });
+  if (!success) throw new HTTPException(401, { message: "Invalid profile" });
+  return c.json(data);
+})
 
 server.post("/login", async (c) => {
   const data = await c.req.formData();
