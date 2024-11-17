@@ -14,6 +14,7 @@ export const schemaDict = {
         key: 'tid',
         record: {
           type: 'object',
+          required: ['name', 'description', 'image', 'payment'],
           properties: {
             name: {
               type: 'string',

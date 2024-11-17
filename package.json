@@ -27,8 +27,10 @@
   },
   "dependencies": {
     "@atproto/api": "^0.13.14",
+    "@atproto/identity": "^0.4.3",
     "@atproto/lexicon": "^0.4.3",
     "@atproto/oauth-client-node": "^0.2.0",
+    "@atproto/sync": "^0.1.6",
     "@atproto/xrpc-server": "^0.7.3",
     "@hono/node-server": "^1.13.5",
     "@hono/zod-validator": "^0.4.1",

@@ -24,4 +24,6 @@ export const dbDatabase: string = process.env[PREFIX + "DB_DATABASE"] ?? "gstand
 
 export const loglevel: string = process.env[PREFIX + "LOG_LEVEL"] ?? "none";
 
+export const firehoseRelay: string = process.env[PREFIX + "FIREHOSE_RELAY"] ?? "wss://bsky.network";
+
 export const isPublicUrl: boolean = host !== "localhost";

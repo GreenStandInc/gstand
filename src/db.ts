@@ -2,6 +2,8 @@ import { Kysely, Migrator, PostgresDialect, SqliteDialect, type Migration, type 
 import pg, { type PoolConfig } from 'pg';
 import SQLiteDb from 'better-sqlite3';
 
+const recordPrefix = "app.gstand.unstable";
+
 const { Pool } = pg;
 
 export type DatabaseSchema = {
@@ -10,8 +12,10 @@ export type DatabaseSchema = {
   auth_state: AuthState,
 }
 
+export const itemRecord = recordPrefix + ".store.item";
 export type Item = {
   uri: string;
+  sellerDid: string;
   name: string;
   description: string;
 }
@@ -31,6 +35,7 @@ const migrations: Record<string, Migration> = {
     async up(db: Kysely<unknown>) {
       await db.schema.createTable('item')
         .addColumn('uri', 'varchar', (col) => col.primaryKey())
+        .addColumn('sellerDid', 'varchar', (col) => col.primaryKey())
         .addColumn('name', 'varchar', (col) => col.notNull())
         .addColumn('description', 'varchar', (col) => col.notNull())
         .execute();

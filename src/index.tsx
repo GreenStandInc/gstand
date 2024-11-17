@@ -1,4 +1,4 @@
-import { dbDatabase, dbPath, dbHost, dbPassword, dbPort, dbType, dbUsername, port, secret, loglevel } from './env.ts';
+import { dbDatabase, dbPath, dbHost, dbPassword, dbPort, dbType, dbUsername, port, secret, loglevel, firehoseRelay } from './env.ts';
 import { createClient } from './auth/client.ts';
 import { type NodeOAuthClient } from '@atproto/oauth-client-node';
 import { Agent } from '@atproto/api';
@@ -9,12 +9,15 @@ import { logger } from 'hono/logger';
 import { serve } from '@hono/node-server';
 import { Fragment, type FC } from 'hono/jsx';
 import { html } from 'hono/html';
-import { createPostgresDb, createSQLiteDb, migrateToLatest } from './db.ts';
+import { createPostgresDb, createSQLiteDb, itemRecord, migrateToLatest } from './db.ts';
 import { serveStatic } from '@hono/node-server/serve-static';
 import path from 'node:path';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
 import { HTTPException } from 'hono/http-exception';
+import { Firehose } from '@atproto/sync';
+import { IdResolver, MemoryCache } from '@atproto/identity';
+import * as Item from '#/lexicon/types/app/gstand/unstable/store/item.ts';
 
 type Session = { did: string }
 
@@ -46,6 +49,46 @@ const getSessionAgent = async (c: Context) => {
     return null;
   }
 }
+
+const HOUR = 60e3 * 60;
+const DAY = HOUR * 24;
+
+const idResolver = new IdResolver({
+  didCache: new MemoryCache(HOUR, DAY)
+})
+
+const firehose = new Firehose({
+  idResolver,
+  service: firehoseRelay,
+  handleEvent: async (e) => {
+    if (e.event === "create" || e.event === "update") {
+      const now = new Date();
+      const rec = e.record;
+      if (e.collection === itemRecord
+        && Item.isRecord(rec) && Item.validateRecord(rec)
+      ) {
+        await db.insertInto('item').values({
+          uri: e.uri.toString(),
+          sellerDid: e.did,
+          name: rec.name,
+          description: rec.description,
+        })
+          .onConflict((oc) => oc.column('uri').doUpdateSet({
+            name: rec.name,
+            description: rec.description,
+          }))
+          .execute();
+      }
+    } else if (e.event === "delete" && e.collection === itemRecord) {
+      await db.deleteFrom('item').where('uri', '=', e.uri.toString()).execute();
+    }
+  },
+  onError: (err) => {
+    console.error(err);
+  },
+  filterCollections: [itemRecord],
+})
+firehose.start()
 
 const server = new Hono();
 if (loglevel !== "none") {
@@ -113,6 +156,15 @@ server.get("/oauth/callback", async (c) => {
   }
 });
 
+const onCloseSignal = () => {
+  setTimeout(() => process.exit(1), 10e3).unref();
+  firehose.destroy();
+  process.exit();
+}
+
 serve({ fetch: server.fetch, port });
+process.on('SIGINT', onCloseSignal)
+process.on('SIGTERM', onCloseSignal)
+
 
 export type AppType = typeof routes;

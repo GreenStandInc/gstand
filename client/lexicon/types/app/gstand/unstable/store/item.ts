@@ -9,12 +9,12 @@ import * as AppGstandUnstableStorePayment from './payment'
 
 export interface Record {
   /** The item's name */
-  name?: string
-  description?: string
-  image?: BlobRef[]
+  name: string
+  description: string
+  image: BlobRef[]
   stock?: number
   /** Prices for the item */
-  payment?: AppGstandUnstableStorePayment.Main[]
+  payment: AppGstandUnstableStorePayment.Main[]
   [k: string]: unknown
 }
 
