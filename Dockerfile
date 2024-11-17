@@ -8,8 +8,7 @@ RUN npm ci
 
 COPY . .
 
-RUN npm run ui:lexgen && \
-    npm run lexgen && \
+RUN npm run lexgen && \
     npm run ui:build && \
     npm run build && \
     npm prune --omit=dev
