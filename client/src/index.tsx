@@ -3,8 +3,13 @@ import { render } from "hono/jsx/dom";
 import { hc } from 'hono/client';
 import type { AppType } from "#/index";
 import { type ProfileViewDetailed } from "@atproto/api/dist/client/types/app/bsky/actor/defs";
+import type { AppGstandStoreItem } from "./lexicon";
 
 const client = hc<AppType>("/");
+
+interface CartItem {
+  item: AppGstandStoreItem.Record;
+}
 
 const LoginFooter = ({ profile }: {
   profile: ProfileViewDetailed | undefined,
@@ -33,7 +38,6 @@ const LoginFooter = ({ profile }: {
 
 const App = () => {
   const [profile, setProfile] = useState<ProfileViewDetailed>();
-  const [avatar, setAvatar] = useState<Uint8Array>();
   useEffect(() => {
     (async () => {
       const pRes = await client.api.profile.$get();
@@ -43,6 +47,7 @@ const App = () => {
       setProfile(p);
     })()
   }, [])
+  const [basket, setBasket] = useState<Array<CartItem>>([])
   return (
     <div className="flex flex-col h-screen">
       <main className="mb-auto flex-grow">

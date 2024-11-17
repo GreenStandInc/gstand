@@ -4,9 +4,9 @@
 import { LexiconDoc, Lexicons } from '@atproto/lexicon'
 
 export const schemaDict = {
-  AppGstandStoreItem: {
+  AppGstandUnstableStoreItem: {
     lexicon: 1,
-    id: 'app.gstand.store.item',
+    id: 'app.gstand.unstable.store.item',
     defs: {
       main: {
         type: 'record',
@@ -17,7 +17,24 @@ export const schemaDict = {
           properties: {
             name: {
               type: 'string',
+              maxLength: 500,
               description: "The item's name",
+            },
+            description: {
+              type: 'string',
+              maxLength: 10000,
+            },
+            image: {
+              type: 'array',
+              items: {
+                type: 'blob',
+                accept: ['image/png', 'image/jpeg'],
+                maxSize: 1000000,
+              },
+            },
+            stock: {
+              type: 'integer',
+              minimum: 0,
             },
             payment: {
               type: 'array',
@@ -32,9 +49,9 @@ export const schemaDict = {
       },
     },
   },
-  AppGstandStorePayment: {
+  AppGstandUnstableStorePayment: {
     lexicon: 1,
-    id: 'app.gstand.store.payment',
+    id: 'app.gstand.unstable.store.payment',
     defs: {
       main: {
         type: 'record',
@@ -63,6 +80,6 @@ export const schemaDict = {
 export const schemas = Object.values(schemaDict)
 export const lexicons: Lexicons = new Lexicons(schemas)
 export const ids = {
-  AppGstandStoreItem: 'app.gstand.store.item',
-  AppGstandStorePayment: 'app.gstand.store.payment',
+  AppGstandUnstableStoreItem: 'app.gstand.unstable.store.item',
+  AppGstandUnstableStorePayment: 'app.gstand.unstable.store.payment',
 }

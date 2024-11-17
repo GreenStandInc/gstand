@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "app.gstand.store.payment",
+  "id": "app.gstand.unstable.store.payment",
   "defs": {
     "main": {
       "type": "record",

@@ -36,15 +36,25 @@ export class AppNS {
 
 export class AppGstandNS {
   _server: Server
-  store: AppGstandStoreNS
+  unstable: AppGstandUnstableNS
 
   constructor(server: Server) {
     this._server = server
-    this.store = new AppGstandStoreNS(server)
+    this.unstable = new AppGstandUnstableNS(server)
   }
 }
 
-export class AppGstandStoreNS {
+export class AppGstandUnstableNS {
+  _server: Server
+  store: AppGstandUnstableStoreNS
+
+  constructor(server: Server) {
+    this._server = server
+    this.store = new AppGstandUnstableStoreNS(server)
+  }
+}
+
+export class AppGstandUnstableStoreNS {
   _server: Server
 
   constructor(server: Server) {

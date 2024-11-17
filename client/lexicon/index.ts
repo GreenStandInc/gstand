@@ -4,11 +4,11 @@
 import { XrpcClient, FetchHandler, FetchHandlerOptions } from '@atproto/xrpc'
 import { schemas } from './lexicons'
 import { CID } from 'multiformats/cid'
-import * as AppGstandStoreItem from './types/app/gstand/store/item'
-import * as AppGstandStorePayment from './types/app/gstand/store/payment'
+import * as AppGstandUnstableStoreItem from './types/app/gstand/unstable/store/item'
+import * as AppGstandUnstableStorePayment from './types/app/gstand/unstable/store/payment'
 
-export * as AppGstandStoreItem from './types/app/gstand/store/item'
-export * as AppGstandStorePayment from './types/app/gstand/store/payment'
+export * as AppGstandUnstableStoreItem from './types/app/gstand/unstable/store/item'
+export * as AppGstandUnstableStorePayment from './types/app/gstand/unstable/store/payment'
 
 export class AtpBaseClient extends XrpcClient {
   app: AppNS
@@ -36,15 +36,25 @@ export class AppNS {
 
 export class AppGstandNS {
   _client: XrpcClient
-  store: AppGstandStoreNS
+  unstable: AppGstandUnstableNS
 
   constructor(client: XrpcClient) {
     this._client = client
-    this.store = new AppGstandStoreNS(client)
+    this.unstable = new AppGstandUnstableNS(client)
   }
 }
 
-export class AppGstandStoreNS {
+export class AppGstandUnstableNS {
+  _client: XrpcClient
+  store: AppGstandUnstableStoreNS
+
+  constructor(client: XrpcClient) {
+    this._client = client
+    this.store = new AppGstandUnstableStoreNS(client)
+  }
+}
+
+export class AppGstandUnstableStoreNS {
   _client: XrpcClient
   item: ItemRecord
   payment: PaymentRecord
@@ -67,10 +77,10 @@ export class ItemRecord {
     params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
   ): Promise<{
     cursor?: string
-    records: { uri: string; value: AppGstandStoreItem.Record }[]
+    records: { uri: string; value: AppGstandUnstableStoreItem.Record }[]
   }> {
     const res = await this._client.call('com.atproto.repo.listRecords', {
-      collection: 'app.gstand.store.item',
+      collection: 'app.gstand.unstable.store.item',
       ...params,
     })
     return res.data
@@ -78,9 +88,13 @@ export class ItemRecord {
 
   async get(
     params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
-  ): Promise<{ uri: string; cid: string; value: AppGstandStoreItem.Record }> {
+  ): Promise<{
+    uri: string
+    cid: string
+    value: AppGstandUnstableStoreItem.Record
+  }> {
     const res = await this._client.call('com.atproto.repo.getRecord', {
-      collection: 'app.gstand.store.item',
+      collection: 'app.gstand.unstable.store.item',
       ...params,
     })
     return res.data
@@ -91,14 +105,14 @@ export class ItemRecord {
       ComAtprotoRepoCreateRecord.InputSchema,
       'collection' | 'record'
     >,
-    record: AppGstandStoreItem.Record,
+    record: AppGstandUnstableStoreItem.Record,
     headers?: Record<string, string>,
   ): Promise<{ uri: string; cid: string }> {
-    record.$type = 'app.gstand.store.item'
+    record.$type = 'app.gstand.unstable.store.item'
     const res = await this._client.call(
       'com.atproto.repo.createRecord',
       undefined,
-      { collection: 'app.gstand.store.item', ...params, record },
+      { collection: 'app.gstand.unstable.store.item', ...params, record },
       { encoding: 'application/json', headers },
     )
     return res.data
@@ -111,7 +125,7 @@ export class ItemRecord {
     await this._client.call(
       'com.atproto.repo.deleteRecord',
       undefined,
-      { collection: 'app.gstand.store.item', ...params },
+      { collection: 'app.gstand.unstable.store.item', ...params },
       { headers },
     )
   }
@@ -128,10 +142,10 @@ export class PaymentRecord {
     params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
   ): Promise<{
     cursor?: string
-    records: { uri: string; value: AppGstandStorePayment.Record }[]
+    records: { uri: string; value: AppGstandUnstableStorePayment.Record }[]
   }> {
     const res = await this._client.call('com.atproto.repo.listRecords', {
-      collection: 'app.gstand.store.payment',
+      collection: 'app.gstand.unstable.store.payment',
       ...params,
     })
     return res.data
@@ -142,10 +156,10 @@ export class PaymentRecord {
   ): Promise<{
     uri: string
     cid: string
-    value: AppGstandStorePayment.Record
+    value: AppGstandUnstableStorePayment.Record
   }> {
     const res = await this._client.call('com.atproto.repo.getRecord', {
-      collection: 'app.gstand.store.payment',
+      collection: 'app.gstand.unstable.store.payment',
       ...params,
     })
     return res.data
@@ -156,14 +170,14 @@ export class PaymentRecord {
       ComAtprotoRepoCreateRecord.InputSchema,
       'collection' | 'record'
     >,
-    record: AppGstandStorePayment.Record,
+    record: AppGstandUnstableStorePayment.Record,
     headers?: Record<string, string>,
   ): Promise<{ uri: string; cid: string }> {
-    record.$type = 'app.gstand.store.payment'
+    record.$type = 'app.gstand.unstable.store.payment'
     const res = await this._client.call(
       'com.atproto.repo.createRecord',
       undefined,
-      { collection: 'app.gstand.store.payment', ...params, record },
+      { collection: 'app.gstand.unstable.store.payment', ...params, record },
       { encoding: 'application/json', headers },
     )
     return res.data
@@ -176,7 +190,7 @@ export class PaymentRecord {
     await this._client.call(
       'com.atproto.repo.deleteRecord',
       undefined,
-      { collection: 'app.gstand.store.payment', ...params },
+      { collection: 'app.gstand.unstable.store.payment', ...params },
       { headers },
     )
   }
