@@ -41,7 +41,7 @@ export const schemaDict = {
               description: 'Prices for the item',
               items: {
                 type: 'ref',
-                ref: 'lex:app.gstand.store.payment',
+                ref: 'lex:app.gstand.unstable.store.payment',
               },
             },
           },

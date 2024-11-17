@@ -38,7 +38,7 @@
             "description": "Prices for the item",
             "items": {
               "type": "ref",
-              "ref": "app.gstand.store.payment"
+              "ref": "app.gstand.unstable.store.payment"
             }
           }
         }

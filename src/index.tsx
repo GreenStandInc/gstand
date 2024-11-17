@@ -66,7 +66,11 @@ let routes = server.get("/api/profile", async (c) => {
   const { success, data } = await agent.getProfile({ actor: agent.assertDid });
   if (!success) throw new HTTPException(401, { message: "Invalid profile" });
   return c.json(data);
-})
+
+}).get("/api/items", async (c) => {
+  const items = await db.selectFrom("item").selectAll().execute();
+  return c.json(items);
+});
 
 server.post("/login", async (c) => {
   const data = await c.req.formData();

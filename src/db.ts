@@ -5,8 +5,15 @@ import SQLiteDb from 'better-sqlite3';
 const { Pool } = pg;
 
 export type DatabaseSchema = {
+  item: Item,
   auth_session: AuthSession,
   auth_state: AuthState,
+}
+
+export type Item = {
+  uri: string;
+  name: string;
+  description: string;
 }
 
 export type AuthSession = {
@@ -22,6 +29,12 @@ export type AuthState = {
 const migrations: Record<string, Migration> = {
   '00001': {
     async up(db: Kysely<unknown>) {
+      await db.schema.createTable('item')
+        .addColumn('uri', 'varchar', (col) => col.primaryKey())
+        .addColumn('name', 'varchar', (col) => col.notNull())
+        .addColumn('description', 'varchar', (col) => col.notNull())
+        .execute();
+
       await db.schema.createTable('auth_session')
         .addColumn('key', 'varchar', (col) => col.primaryKey())
         .addColumn('session', 'varchar', (col) => col.notNull())
@@ -35,6 +48,7 @@ const migrations: Record<string, Migration> = {
     async down(db: Kysely<unknown>) {
       await db.schema.dropTable('auth_state').execute();
       await db.schema.dropTable('auth_session').execute();
+      await db.schema.dropTable('item').execute();
     },
   }
 }

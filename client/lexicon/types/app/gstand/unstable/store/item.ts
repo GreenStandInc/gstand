@@ -5,7 +5,7 @@ import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../../util'
 import { lexicons } from '../../../../../lexicons'
 import { CID } from 'multiformats/cid'
-import * as AppGstandStorePayment from '../../store/payment'
+import * as AppGstandUnstableStorePayment from './payment'
 
 export interface Record {
   /** The item's name */
@@ -14,7 +14,7 @@ export interface Record {
   image?: BlobRef[]
   stock?: number
   /** Prices for the item */
-  payment?: AppGstandStorePayment.Main[]
+  payment?: AppGstandUnstableStorePayment.Main[]
   [k: string]: unknown
 }
 
