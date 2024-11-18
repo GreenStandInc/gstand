@@ -1,5 +1,6 @@
 import { useEffect, useState } from "hono/jsx";
 import type { Item } from "#/db.ts";
+import { client } from "./api";
 
 export const ItemCard = ({ item }: { item: Item }) => {
   return (
@@ -18,12 +19,17 @@ export const UpdateItem = ({item, setItem}: {
     <form onSubmit={(x) => {
       x.preventDefault();
       x.stopPropagation();
+      client.api.addItem.$post({form: item});
     }}>
       <label for="name">
         Name: <input onChange={(e) => {
           setItem({...item, name: (e.target as HTMLInputElement).value});
-        }}
-        type="text" name="name" value={item.name} />
+        }} type="text" name="name" value={item.name} />
+      </label>
+      <label for="description">
+        Description: <input onChange={(e) => {
+          setItem({...item, description: (e.target as HTMLInputElement).value});
+        }} type="text" name="description" value={item.description}/>
       </label>
       <input type="submit" value="Submit" />
     </form>

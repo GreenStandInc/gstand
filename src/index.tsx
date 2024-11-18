@@ -9,7 +9,7 @@ import { logger } from 'hono/logger';
 import { serve } from '@hono/node-server';
 import { Fragment, type FC } from 'hono/jsx';
 import { html } from 'hono/html';
-import { createPostgresDb, createSQLiteDb, itemRecord, migrateToLatest } from './db.ts';
+import { createPostgresDb, createSQLiteDb, itemRecord, itemToItemRecord, migrateToLatest, ZodItem, type Item } from './db.ts';
 import { serveStatic } from '@hono/node-server/serve-static';
 import path from 'node:path';
 import { zValidator } from '@hono/zod-validator';
@@ -17,7 +17,8 @@ import { z } from 'zod';
 import { HTTPException } from 'hono/http-exception';
 import { Firehose } from '@atproto/sync';
 import { IdResolver, MemoryCache } from '@atproto/identity';
-import * as Item from '#/lexicon/types/app/gstand/unstable/store/item.ts';
+import * as ItemRecord from '#/lexicon/types/app/gstand/unstable/store/item.ts';
+import { TID } from '@atproto/common';
 
 type Session = { did: string }
 
@@ -65,7 +66,7 @@ const firehose = new Firehose({
       const now = new Date();
       const rec = e.record;
       if (e.collection === itemRecord
-        && Item.isRecord(rec) && Item.validateRecord(rec)
+        && ItemRecord.isRecord(rec) && ItemRecord.validateRecord(rec)
       ) {
         await db.insertInto('item').values({
           uri: e.uri.toString(),
@@ -113,6 +114,29 @@ let routes = server.get("/api/profile", async (c) => {
 }).get("/api/items", async (c) => {
   const items = await db.selectFrom("item").selectAll().execute();
   return c.json(items);
+
+}).post("/api/addItem", zValidator("form", ZodItem), async (c) => {
+  const i: Item = c.req.valid('form');
+  const agent = await getSessionAgent(c);
+  if (!agent) throw new HTTPException(401, { message: "Not logged in" });
+  try {
+    const res = await agent.com.atproto.repo.putRecord({
+      repo: agent.assertDid,
+      collection: itemRecord,
+      record: itemToItemRecord(i),
+      rkey: TID.nextStr(),
+    })
+    const uri = res.data.uri;
+    try {
+      i.uri = uri;
+      await db.insertInto("item").values(i).execute();
+    } catch(e) {
+      console.error("Failed to update database");
+    }
+  } catch(e) {
+    throw new HTTPException(500, { message: "Failed to write record"});
+  }
+  return c.json(i);
 });
 
 server.post("/login", async (c) => {

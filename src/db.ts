@@ -2,6 +2,8 @@ import { Kysely, Migrator, PostgresDialect, SqliteDialect, type Migration, type 
 import pg, { type PoolConfig } from 'pg';
 import SQLiteDb from 'better-sqlite3';
 import { describe } from "node:test";
+import { z } from 'zod';
+import * as ItemRecord from '#/lexicon/types/app/gstand/unstable/store/item.ts';
 
 const recordPrefix = "app.gstand.unstable";
 
@@ -20,6 +22,22 @@ export type Item = {
   name: string;
   description: string;
 }
+export const ZodItem = z.object({
+  uri: z.string(),
+  sellerDid: z.string(),
+  name: z.string(),
+  description: z.string(),
+});
+ZodItem._output satisfies Item;
+export const itemToItemRecord = (i: Item): ItemRecord.Record => {
+  return {
+    $type: itemRecord,
+    name: i.name,
+    description: i.description,
+    image: [],
+    payment: [],
+  }
+}
 
 export type AuthSession = {
   key: string,
@@ -36,7 +54,7 @@ const migrations: Record<string, Migration> = {
     async up(db: Kysely<unknown>) {
       await db.schema.createTable('item')
         .addColumn('uri', 'varchar', (col) => col.primaryKey())
-        .addColumn('sellerDid', 'varchar', (col) => col.primaryKey())
+        .addColumn('sellerDid', 'varchar', (col) => col.notNull())
         .addColumn('name', 'varchar', (col) => col.notNull())
         .addColumn('description', 'varchar', (col) => col.notNull())
         .execute();

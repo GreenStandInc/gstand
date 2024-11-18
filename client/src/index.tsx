@@ -1,13 +1,10 @@
 import { useEffect, useState } from "hono/jsx";
 import { render } from "hono/jsx/dom";
-import { hc } from 'hono/client';
-import type { AppType } from "#/index";
 import { type ProfileViewDetailed } from "@atproto/api/dist/client/types/app/bsky/actor/defs";
 import * as strings from "./strings";
-import type { ImmutableItem, Item } from "#/db";
+import type { Item } from "#/db";
 import { UpdateItem, ItemCard } from "./item";
-
-const client = hc<AppType>("/");
+import { client } from "./api";
 
 interface CartItem {
   item: Item,
@@ -83,7 +80,7 @@ const App = () => {
             <ItemCard item={i} />
           </div>
         })}
-        <UpdateItem item={newItem} setItem={setNewItem}/>
+        {profile === undefined ? <></> : <UpdateItem item={newItem} setItem={setNewItem} />}
       </main>
       <LoginFooter profile={profile} />
     </div>
