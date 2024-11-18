@@ -129,6 +129,7 @@ let routes = server.get("/api/profile", async (c) => {
     const uri = res.data.uri;
     try {
       i.uri = uri;
+      i.sellerDid = agent.assertDid;
       await db.insertInto("item").values(i).execute();
     } catch(e) {
       console.error("Failed to update database");
