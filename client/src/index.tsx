@@ -4,8 +4,8 @@ import { hc } from 'hono/client';
 import type { AppType } from "#/index";
 import { type ProfileViewDetailed } from "@atproto/api/dist/client/types/app/bsky/actor/defs";
 import * as strings from "./strings";
-import type { Item } from "#/db";
-import { ItemCard } from "./item";
+import type { ImmutableItem, Item } from "#/db";
+import { UpdateItem, ItemCard } from "./item";
 
 const client = hc<AppType>("/");
 
@@ -13,6 +13,14 @@ interface CartItem {
   item: Item,
   quantity: number;
   payment: string;
+}
+export const createItem = (): Item => {
+  return {
+    uri: "",
+    sellerDid: "",
+    name: "",
+    description: ""
+  }
 }
 
 const LoginFooter = ({ profile }: {
@@ -61,6 +69,9 @@ const App = () => {
       setItems(i);
     })()
   }, [])
+
+  const [newItem, setNewItem] = useState<Item>(createItem());
+
   return (
     <div className="flex flex-col h-screen">
       <main className="container mb-auto flex-grow">
@@ -72,6 +83,7 @@ const App = () => {
             <ItemCard item={i} />
           </div>
         })}
+        <UpdateItem item={newItem} setItem={setNewItem}/>
       </main>
       <LoginFooter profile={profile} />
     </div>
