@@ -16,7 +16,8 @@ export const createItem = (): Item => {
     uri: "",
     sellerDid: "",
     name: "",
-    description: ""
+    description: "",
+    image: [],
   }
 }
 
@@ -76,9 +77,11 @@ const App = () => {
           {strings.ForYou}
         </h2>
         {items.map((i) => {
-          <div key={i.uri}>
-            <ItemCard item={i} />
-          </div>
+          return (
+            <div key={i.uri}>
+              <ItemCard item={i} />
+            </div>
+          )
         })}
         {profile === undefined ? <></> : <UpdateItem item={newItem} setItem={setNewItem} />}
       </main>

@@ -9,7 +9,7 @@ import { logger } from 'hono/logger';
 import { serve } from '@hono/node-server';
 import { Fragment, type FC } from 'hono/jsx';
 import { html } from 'hono/html';
-import { createPostgresDb, createSQLiteDb, itemRecord, itemToItemRecord, migrateToLatest, ZodItem, type Item } from './db.ts';
+import { createItem, createPostgresDb, createSQLiteDb, itemRecord, itemToItemRecord, migrateToLatest, ZodItem, type Item } from './db.ts';
 import { serveStatic } from '@hono/node-server/serve-static';
 import path from 'node:path';
 import { zValidator } from '@hono/zod-validator';
@@ -73,6 +73,7 @@ const firehose = new Firehose({
           sellerDid: e.did,
           name: rec.name,
           description: rec.description,
+          image: []
         })
           .onConflict((oc) => oc.column('uri').doUpdateSet({
             name: rec.name,
@@ -89,7 +90,8 @@ const firehose = new Firehose({
   },
   filterCollections: [itemRecord],
 })
-firehose.start()
+// TODO, re-enable
+// firehose.start();
 
 const server = new Hono();
 if (loglevel !== "none") {
@@ -111,19 +113,40 @@ let routes = server.get("/api/profile", async (c) => {
   if (!success) throw new HTTPException(401, { message: "Invalid profile" });
   return c.json(data);
 
+
 }).get("/api/items", async (c) => {
   const items = await db.selectFrom("item").selectAll().execute();
   return c.json(items);
 
-}).post("/api/addItem", zValidator("form", ZodItem), async (c) => {
-  const i: Item = c.req.valid('form');
+}).post("/api/addItem", zValidator("form", z.object({
+  name: z.string(),
+  description: z.string(),
+  image: z.union([z.string(), z.instanceof(File)]),
+})), async (c) => {
+  console.log("Here?");
+  const fData = c.req.valid('form');
+  const i: Item = {
+    ...createItem(),
+    name: fData.name,
+    description: fData.description,
+  }
+  const images: File[] = fData.image === "" ? [] : [(fData.image as File)];
   const agent = await getSessionAgent(c);
   if (!agent) throw new HTTPException(401, { message: "Not logged in" });
+
+  console.log("HERE");
+  const uploadedImages = await Promise.all(images.map(async (f) => {
+    const res = await agent.com.atproto.repo.uploadBlob(f);
+    console.log("Uploading");
+    return res.data.blob;
+  }));
+
+  console.log("Done?");
   try {
     const res = await agent.com.atproto.repo.putRecord({
       repo: agent.assertDid,
       collection: itemRecord,
-      record: itemToItemRecord(i),
+      record: { ...itemToItemRecord(i), images: uploadedImages },
       rkey: TID.nextStr(),
     })
     const uri = res.data.uri;
@@ -131,11 +154,14 @@ let routes = server.get("/api/profile", async (c) => {
       i.uri = uri;
       i.sellerDid = agent.assertDid;
       await db.insertInto("item").values(i).execute();
-    } catch(e) {
+    } catch (e) {
       console.error("Failed to update database");
+      console.error(e)
     }
-  } catch(e) {
-    throw new HTTPException(500, { message: "Failed to write record"});
+  } catch (e) {
+    console.error("Failed to write record");
+    console.error(e);
+    throw new HTTPException(500, { message: "Failed to write record" });
   }
   return c.json(i);
 });

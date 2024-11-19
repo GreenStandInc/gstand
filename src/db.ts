@@ -21,12 +21,14 @@ export type Item = {
   sellerDid: string;
   name: string;
   description: string;
+  image: string[];
 }
 export const ZodItem = z.object({
   uri: z.string(),
   sellerDid: z.string(),
   name: z.string(),
   description: z.string(),
+  image: z.array(z.string())
 });
 ZodItem._output satisfies Item;
 export const itemToItemRecord = (i: Item): ItemRecord.Record => {
@@ -36,6 +38,15 @@ export const itemToItemRecord = (i: Item): ItemRecord.Record => {
     description: i.description,
     image: [],
     payment: [],
+  }
+}
+export const createItem = (): Item => {
+  return {
+    uri: "",
+    sellerDid: "",
+    name: "",
+    description: "",
+    image: [],
   }
 }
 
