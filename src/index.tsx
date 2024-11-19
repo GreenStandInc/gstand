@@ -91,7 +91,9 @@ const firehose = new Firehose({
   filterCollections: [itemRecord],
 })
 // TODO, re-enable
-// firehose.start();
+if (firehoseRelay !== "") {
+  firehose.start();
+}
 
 const server = new Hono();
 if (loglevel !== "none") {
@@ -123,7 +125,6 @@ let routes = server.get("/api/profile", async (c) => {
   description: z.string(),
   image: z.union([z.string(), z.instanceof(File)]),
 })), async (c) => {
-  console.log("Here?");
   const fData = c.req.valid('form');
   const i: Item = {
     ...createItem(),
@@ -134,14 +135,11 @@ let routes = server.get("/api/profile", async (c) => {
   const agent = await getSessionAgent(c);
   if (!agent) throw new HTTPException(401, { message: "Not logged in" });
 
-  console.log("HERE");
   const uploadedImages = await Promise.all(images.map(async (f) => {
     const res = await agent.com.atproto.repo.uploadBlob(f);
-    console.log("Uploading");
     return res.data.blob;
   }));
 
-  console.log("Done?");
   try {
     const res = await agent.com.atproto.repo.putRecord({
       repo: agent.assertDid,
@@ -209,7 +207,9 @@ server.get("/oauth/callback", async (c) => {
 
 const onCloseSignal = () => {
   setTimeout(() => process.exit(1), 10e3).unref();
-  firehose.destroy();
+  if (firehoseRelay !== "") {
+    firehose.destroy();
+  }
   process.exit();
 }
 
