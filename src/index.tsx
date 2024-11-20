@@ -9,7 +9,8 @@ import { logger } from 'hono/logger';
 import { serve } from '@hono/node-server';
 import { Fragment, type FC } from 'hono/jsx';
 import { html } from 'hono/html';
-import { createItem, createPostgresDb, createSQLiteDb, itemRecord, itemToItemRecord, migrateToLatest, ZodItem, type Item } from './db.ts';
+import { createPostgresDb, createSQLiteDb, migrateToLatest } from '#/db/db.ts';
+import * as Item from '#/db/item.ts';
 import { serveStatic } from '@hono/node-server/serve-static';
 import path from 'node:path';
 import { zValidator } from '@hono/zod-validator';
@@ -65,30 +66,25 @@ const firehose = new Firehose({
     if (e.event === "create" || e.event === "update") {
       const now = new Date();
       const rec = e.record;
-      if (e.collection === itemRecord
+      if (e.collection === Item.RecordPath
         && ItemRecord.isRecord(rec) && ItemRecord.validateRecord(rec)
       ) {
-        await db.insertInto('item').values({
+        await Item.insert(db, {
           uri: e.uri.toString(),
           sellerDid: e.did,
           name: rec.name,
           description: rec.description,
           image: []
-        })
-          .onConflict((oc) => oc.column('uri').doUpdateSet({
-            name: rec.name,
-            description: rec.description,
-          }))
-          .execute();
+        });
       }
-    } else if (e.event === "delete" && e.collection === itemRecord) {
-      await db.deleteFrom('item').where('uri', '=', e.uri.toString()).execute();
+    } else if (e.event === "delete" && e.collection === Item.RecordPath) {
+      await Item.del(db, e.uri.toString());
     }
   },
   onError: (err) => {
     console.error(err);
   },
-  filterCollections: [itemRecord],
+  filterCollections: [Item.RecordPath],
 })
 // TODO, re-enable
 if (firehoseRelay !== "") {
@@ -118,7 +114,7 @@ let routes = server.get("/api/profile", async (c) => {
 
 }).get("/api/items", async (c) => {
   const items = await db.selectFrom("item").selectAll().execute();
-  return c.json(items);
+  return c.json(items.map((i) => {return {...i, image: []}}));
 
 }).post("/api/addItem", zValidator("form", z.object({
   name: z.string(),
@@ -126,8 +122,8 @@ let routes = server.get("/api/profile", async (c) => {
   image: z.union([z.string(), z.instanceof(File)]),
 })), async (c) => {
   const fData = c.req.valid('form');
-  const i: Item = {
-    ...createItem(),
+  const i: Item.Item = {
+    ...Item.create(),
     name: fData.name,
     description: fData.description,
   }
@@ -143,15 +139,15 @@ let routes = server.get("/api/profile", async (c) => {
   try {
     const res = await agent.com.atproto.repo.putRecord({
       repo: agent.assertDid,
-      collection: itemRecord,
-      record: { ...itemToItemRecord(i), images: uploadedImages },
+      collection: Item.RecordPath,
+      record: { ...Item.toRecord(i), images: uploadedImages },
       rkey: TID.nextStr(),
     })
     const uri = res.data.uri;
     try {
       i.uri = uri;
       i.sellerDid = agent.assertDid;
-      await db.insertInto("item").values(i).execute();
+      await Item.insert(db, i);
     } catch (e) {
       console.error("Failed to update database");
       console.error(e)

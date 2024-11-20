@@ -1,53 +1,21 @@
-import { Kysely, Migrator, PostgresDialect, SqliteDialect, type Migration, type MigrationProvider } from "kysely"
+import { type Selectable, type Insertable, Kysely, Migrator, PostgresDialect, SqliteDialect, type Generated, type Migration, type MigrationProvider, type Updateable } from "kysely"
 import pg, { type PoolConfig } from 'pg';
 import SQLiteDb from 'better-sqlite3';
 import { describe } from "node:test";
 import { z } from 'zod';
-import * as ItemRecord from '#/lexicon/types/app/gstand/unstable/store/item.ts';
+import { dbType } from "#/env";
+import * as Item from './item';
+import * as Image from './image';
 
 const recordPrefix = "app.gstand.unstable";
 
 const { Pool } = pg;
 
 export type DatabaseSchema = {
-  item: Item,
+  image: Image.Table,
+  item: Item.Table,
   auth_session: AuthSession,
   auth_state: AuthState,
-}
-
-export const itemRecord = recordPrefix + ".store.item";
-export type Item = {
-  uri: string;
-  sellerDid: string;
-  name: string;
-  description: string;
-  image: string[];
-}
-export const ZodItem = z.object({
-  uri: z.string(),
-  sellerDid: z.string(),
-  name: z.string(),
-  description: z.string(),
-  image: z.array(z.string())
-});
-ZodItem._output satisfies Item;
-export const itemToItemRecord = (i: Item): ItemRecord.Record => {
-  return {
-    $type: itemRecord,
-    name: i.name,
-    description: i.description,
-    image: [],
-    payment: [],
-  }
-}
-export const createItem = (): Item => {
-  return {
-    uri: "",
-    sellerDid: "",
-    name: "",
-    description: "",
-    image: [],
-  }
 }
 
 export type AuthSession = {
@@ -63,11 +31,27 @@ export type AuthState = {
 const migrations: Record<string, Migration> = {
   '00001': {
     async up(db: Kysely<unknown>) {
+
+      if (dbType === "sqlite") {
+        await db.schema.createTable('image')
+          .addColumn('id', 'integer', (col) => col.autoIncrement().primaryKey())
+          .addColumn('type', 'varchar', (col) => col.notNull())
+          .addColumn('data', 'blob', (col) => col.notNull())
+          .execute();
+      } else {
+        await db.schema.createTable('image')
+          .addColumn('id', 'serial', (col) => col.primaryKey())
+          .addColumn('type', 'varchar', (col) => col.notNull())
+          .addColumn('data', 'blob', (col) => col.notNull())
+          .execute();
+      }
+
       await db.schema.createTable('item')
         .addColumn('uri', 'varchar', (col) => col.primaryKey())
         .addColumn('sellerDid', 'varchar', (col) => col.notNull())
         .addColumn('name', 'varchar', (col) => col.notNull())
         .addColumn('description', 'varchar', (col) => col.notNull())
+        .addColumn('image', 'varchar', (col) => col.notNull())
         .execute();
 
       await db.schema.createTable('auth_session')
@@ -84,6 +68,7 @@ const migrations: Record<string, Migration> = {
       await db.schema.dropTable('auth_state').execute();
       await db.schema.dropTable('auth_session').execute();
       await db.schema.dropTable('item').execute();
+      await db.schema.dropTable('image').execute();
     },
   }
 }

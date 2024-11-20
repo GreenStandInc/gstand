@@ -76,6 +76,36 @@ export const schemaDict = {
       },
     },
   },
+  AppGstandUnstableStoreShop: {
+    lexicon: 1,
+    id: 'app.gstand.unstable.store.shop',
+    defs: {
+      main: {
+        type: 'record',
+        description: 'A curated shop page',
+        key: 'tid',
+        record: {
+          type: 'object',
+          properties: {
+            name: {
+              type: 'string',
+            },
+            banner: {
+              type: 'blob',
+              accept: ['image/png', 'image/jpeg'],
+            },
+            items: {
+              type: 'array',
+              items: {
+                type: 'ref',
+                ref: 'lex:app.gstand.unstable.store.item',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
 } as const satisfies Record<string, LexiconDoc>
 
 export const schemas = Object.values(schemaDict)
@@ -83,4 +113,5 @@ export const lexicons: Lexicons = new Lexicons(schemas)
 export const ids = {
   AppGstandUnstableStoreItem: 'app.gstand.unstable.store.item',
   AppGstandUnstableStorePayment: 'app.gstand.unstable.store.payment',
+  AppGstandUnstableStoreShop: 'app.gstand.unstable.store.shop',
 }

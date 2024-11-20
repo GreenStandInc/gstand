@@ -28,6 +28,6 @@
     },
     "outDir": "dist"
   },
-  "include": ["src/**/*","client/**/*"],
+  "include": ["src/**/*","client/**/*", "test/**/*"],
   "exclude": ["node_modules", "src/lexicon/**/*", "client/lexicon/**/*"]
 }

@@ -2,7 +2,7 @@ import { useEffect, useState } from "hono/jsx";
 import { render } from "hono/jsx/dom";
 import { type ProfileViewDetailed } from "@atproto/api/dist/client/types/app/bsky/actor/defs";
 import * as strings from "./strings";
-import type { Item } from "#/db";
+import type { Item } from "#/db/item";
 import { UpdateItem, ItemCard } from "./item";
 import { client } from "./api";
 

@@ -1,0 +1,1 @@
+export const recordPrefix = "app.gstand.unstable";

@@ -8,7 +8,7 @@
     "dev": "tsx watch --clear-screen=false src/index.tsx",
     "build": "tsup",
     "start": "node dist/index.esm.js",
-    "lexgen": "lex gen-server ./src/lexicon ./lexicons/**/* --yes && lex gen-api ./client/lexicon ./lexicons/**/* --yes"
+    "lexgen": "lex gen-server ./src/lexicon ./lexicons/* --yes && lex gen-api ./client/lexicon ./lexicons/* --yes"
   },
   "devDependencies": {
     "@atproto/lex-cli": "^0.5.2",
