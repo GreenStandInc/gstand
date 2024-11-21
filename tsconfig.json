@@ -4,13 +4,13 @@
     "target": "ESNext",
     "module": "ESNext",
     "moduleDetection": "force",
+    "esModuleInterop": true,
     "jsx": "react-jsx",
     "jsxImportSource": "hono/jsx",
     "allowJs": true,
 
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
-    "verbatimModuleSyntax": true,
     "noEmit": true,
 
     "strict": true,

@@ -1,7 +1,6 @@
-import { type Selectable, type Insertable, Kysely, Migrator, PostgresDialect, SqliteDialect, type Generated, type Migration, type MigrationProvider, type Updateable } from "kysely"
+import { type Selectable, type Insertable, Kysely, Migrator, PostgresDialect, SqliteDialect, type Generated, type Migration, type MigrationProvider, type Updateable } from "kysely";
 import pg, { type PoolConfig } from 'pg';
 import SQLiteDb from 'better-sqlite3';
-import { describe } from "node:test";
 import { z } from 'zod';
 import { dbType } from "#/env";
 import * as Item from './item';

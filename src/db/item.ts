@@ -53,7 +53,6 @@ export const insert = async (db: Kysely<DatabaseSchema>, item: Item) => {
     const imageIds = item.image.length === 0 ? [] :
       ((await trx.insertInto('image').values(item.image).execute())
         .map((i) => i.insertId).filter((v) => v !== undefined));
-    console.log({ ...item, image: JSON.stringify(imageIds) });
     return await trx.insertInto('item')
       .values({ ...item, image: JSON.stringify(imageIds) })
       .execute();
