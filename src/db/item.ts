@@ -68,7 +68,7 @@ export const insert = async (db: Kysely<DatabaseSchema>, item: Item) => {
   //   name: rec.name,
   //   description: rec.description,
   // }))
-  // Note that you'l _also_ have to handle deleting images.
+  // Note that you'll _also_ have to handle deleting images.
 }
 
 export const get = async (db: Kysely<DatabaseSchema>, key: string): Promise<Item> => {

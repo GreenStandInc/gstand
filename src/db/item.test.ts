@@ -70,10 +70,10 @@ test("updateWithImage", async () => {
   const i = Item.create({
     uri: "updateWithImageTest",
     image: [
-      Image.create({ type: "A", data: Buffer.from([1, 2, 3]) }),
+      Image.create({ data: Buffer.from([1, 2, 3]) }),
     ]
   });
-  const u = { ...i, image: [Image.create({ type: "B", data: Buffer.from([7, 8, 9]) })] };
+  const u = { ...i, image: [Image.create({ data: Buffer.from([7, 8, 9]) })] };
   await Item.insert(db, i);
   await Item.update(db, "updateWithImageTest", u);
   const o = await Item.get(db, "updateWithImageTest");
