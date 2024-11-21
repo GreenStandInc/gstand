@@ -38,6 +38,12 @@ export const create = ({
   name = "",
   description = "",
   image = []
+}: {
+  uri?: string,
+  sellerDid?: string,
+  name?: string,
+  description?: string,
+  image?: Array<Image.Image>,
 } = {}): Item => {
   return {
     uri,
@@ -50,9 +56,9 @@ export const create = ({
 
 export const insert = async (db: Kysely<DatabaseSchema>, item: Item) => {
   return await db.transaction().execute(async (trx) => {
-    const imageIds = item.image.length === 0 ? [] :
-      ((await trx.insertInto('image').values(item.image).execute())
-        .map((i) => i.insertId).filter((v) => v !== undefined));
+    const imageIds = await Promise.all(item.image.map(async (i) => {
+      return (await trx.insertInto('image').values(i).execute())[0].insertId?.toString();
+    }));
     return await trx.insertInto('item')
       .values({ ...item, image: JSON.stringify(imageIds) })
       .execute();
@@ -69,15 +75,15 @@ export const get = async (db: Kysely<DatabaseSchema>, key: string): Promise<Item
   const i = await db.selectFrom("item").selectAll().where("uri", "=", key).executeTakeFirstOrThrow();
   const image_ids = (JSON.parse(i.image) as number[]);
   const image = await db.selectFrom('image').selectAll().where('id', 'in', image_ids).execute();
-  return { ...i, image };
+  return { ...i, image: image.map(Image.create) };
 }
 
 export const del = async (db: Kysely<DatabaseSchema>, key: string) => {
-  await db.transaction().execute(async (trx) => {
-    const i = await db.selectFrom("item").selectAll().where("uri", "=", key).executeTakeFirstOrThrow();
+  return await db.transaction().execute(async (trx) => {
+    const i = await trx.selectFrom("item").selectAll().where("uri", "=", key).executeTakeFirstOrThrow();
     const imageIds = (JSON.parse(i.image) as number[]);
     await trx.deleteFrom('image').where('id', 'in', imageIds).execute();
-    await trx.deleteFrom('item').where('uri', '=', key).execute();
+    return await trx.deleteFrom('item').where('uri', '=', key).execute();
   })
 }
 
@@ -89,8 +95,9 @@ export const update = async (db: Kysely<DatabaseSchema>, key: string, item: Item
     await trx.deleteFrom('image').where('id', 'in', imageIds).execute();
     await trx.deleteFrom('item').where('uri', '=', key).execute();
     // Insert new item
-    const newImageIds = (await trx.insertInto('image').values(item.image).execute())
-      .map((i) => i.insertId).filter((v) => v !== undefined);
+    const newImageIds = await Promise.all(item.image.map(async (i) => {
+      return (await trx.insertInto('image').values(i).execute())[0].insertId?.toString();
+    }));
     return await trx.insertInto('item').values({ ...item, image: JSON.stringify(newImageIds) }).execute();
   })
 }
