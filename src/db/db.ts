@@ -2,7 +2,6 @@ import { type Selectable, type Insertable, Kysely, Migrator, PostgresDialect, Sq
 import pg, { type PoolConfig } from 'pg';
 import SQLiteDb from 'better-sqlite3';
 import { z } from 'zod';
-import { dbType } from "#/env";
 import * as Item from './item';
 import * as Image from './image';
 
@@ -27,54 +26,58 @@ export type AuthState = {
   state: string,
 }
 
-const migrations: Record<string, Migration> = {
-  '00001': {
-    async up(db: Kysely<unknown>) {
+const migrations = (dbType: string): Record<string, Migration> => {
+  return {
+    '00001': {
+      async up(db: Kysely<unknown>) {
 
-      if (dbType === "sqlite") {
-        await db.schema.createTable('image')
-          .addColumn('id', 'integer', (col) => col.autoIncrement().primaryKey())
-          .addColumn('type', 'varchar', (col) => col.notNull())
-          .addColumn('data', 'blob', (col) => col.notNull())
+        if (dbType === "sqlite") {
+          await db.schema.createTable('image')
+            .addColumn('id', 'integer', (col) => col.autoIncrement().primaryKey())
+            .addColumn('type', 'varchar', (col) => col.notNull())
+            .addColumn('data', 'blob', (col) => col.notNull())
+            .execute();
+        } else {
+          await db.schema.createTable('image')
+            .addColumn('id', 'serial', (col) => col.primaryKey())
+            .addColumn('type', 'varchar', (col) => col.notNull())
+            .addColumn('data', 'blob', (col) => col.notNull())
+            .execute();
+        }
+
+        await db.schema.createTable('item')
+          .addColumn('uri', 'varchar', (col) => col.primaryKey())
+          .addColumn('sellerDid', 'varchar', (col) => col.notNull())
+          .addColumn('name', 'varchar', (col) => col.notNull())
+          .addColumn('description', 'varchar', (col) => col.notNull())
+          .addColumn('image', 'varchar', (col) => col.notNull())
           .execute();
-      } else {
-        await db.schema.createTable('image')
-          .addColumn('id', 'serial', (col) => col.primaryKey())
-          .addColumn('type', 'varchar', (col) => col.notNull())
-          .addColumn('data', 'blob', (col) => col.notNull())
+
+        await db.schema.createTable('auth_session')
+          .addColumn('key', 'varchar', (col) => col.primaryKey())
+          .addColumn('session', 'varchar', (col) => col.notNull())
           .execute();
-      }
 
-      await db.schema.createTable('item')
-        .addColumn('uri', 'varchar', (col) => col.primaryKey())
-        .addColumn('sellerDid', 'varchar', (col) => col.notNull())
-        .addColumn('name', 'varchar', (col) => col.notNull())
-        .addColumn('description', 'varchar', (col) => col.notNull())
-        .addColumn('image', 'varchar', (col) => col.notNull())
-        .execute();
-
-      await db.schema.createTable('auth_session')
-        .addColumn('key', 'varchar', (col) => col.primaryKey())
-        .addColumn('session', 'varchar', (col) => col.notNull())
-        .execute();
-
-      await db.schema.createTable('auth_state')
-        .addColumn('key', 'varchar', (col) => col.primaryKey())
-        .addColumn('state', 'varchar', (col) => col.notNull())
-        .execute();
-    },
-    async down(db: Kysely<unknown>) {
-      await db.schema.dropTable('auth_state').execute();
-      await db.schema.dropTable('auth_session').execute();
-      await db.schema.dropTable('item').execute();
-      await db.schema.dropTable('image').execute();
-    },
+        await db.schema.createTable('auth_state')
+          .addColumn('key', 'varchar', (col) => col.primaryKey())
+          .addColumn('state', 'varchar', (col) => col.notNull())
+          .execute();
+      },
+      async down(db: Kysely<unknown>) {
+        await db.schema.dropTable('auth_state').execute();
+        await db.schema.dropTable('auth_session').execute();
+        await db.schema.dropTable('item').execute();
+        await db.schema.dropTable('image').execute();
+      },
+    }
   }
 }
 
-const migrationProvider: MigrationProvider = {
-  async getMigrations() {
-    return migrations;
+const migrationProvider = (dbType: string): MigrationProvider => {
+  return {
+    async getMigrations() {
+      return migrations(dbType);
+    }
   }
 }
 
@@ -96,8 +99,8 @@ export const createPostgresDb = (opts: PoolConfig) => {
   });
 }
 
-export const migrateToLatest = async (db: Database) => {
-  const migrator = new Migrator({ db, provider: migrationProvider });
+export const migrateToLatest = async (db: Database, dbType: string) => {
+  const migrator = new Migrator({ db, provider: migrationProvider(dbType) });
   const { error } = await migrator.migrateToLatest()
   if (error) throw error;
 }

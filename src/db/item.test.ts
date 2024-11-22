@@ -13,7 +13,7 @@ let db: Database;
 beforeAll(async () => {
   const dir = await fsp.mkdtemp(path.join(os.tmpdir(), "gstand-"));
   db = createSQLiteDb(path.join(dir, "test.db"));
-  await migrateToLatest(db);
+  await migrateToLatest(db, "sqlite");
 })
 
 test('create', async () => {

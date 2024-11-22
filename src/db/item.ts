@@ -2,7 +2,7 @@ import type { Kysely } from "kysely";
 import { recordPrefix } from "./record";
 import * as Image from './image';
 import * as ItemRecord from '#/lexicon/types/app/gstand/unstable/store/item.ts';
-import type { DatabaseSchema } from "./db";
+import type { Database } from "./db";
 
 export const RecordPath = recordPrefix + ".store.item";
 
@@ -54,7 +54,7 @@ export const create = ({
   }
 }
 
-export const insert = async (db: Kysely<DatabaseSchema>, item: Item) => {
+export const insert = async (db: Database, item: Item) => {
   return await db.transaction().execute(async (trx) => {
     const imageIds = await Promise.all(item.image.map(async (i) => {
       return (await trx.insertInto('image').values(i).execute())[0].insertId?.toString();
@@ -71,14 +71,14 @@ export const insert = async (db: Kysely<DatabaseSchema>, item: Item) => {
   // Note that you'll _also_ have to handle deleting images.
 }
 
-export const get = async (db: Kysely<DatabaseSchema>, key: string): Promise<Item> => {
+export const get = async (db: Database, key: string): Promise<Item> => {
   const i = await db.selectFrom("item").selectAll().where("uri", "=", key).executeTakeFirstOrThrow();
   const image_ids = (JSON.parse(i.image) as number[]);
   const image = await db.selectFrom('image').selectAll().where('id', 'in', image_ids).execute();
   return { ...i, image: image.map(Image.create) };
 }
 
-export const del = async (db: Kysely<DatabaseSchema>, key: string) => {
+export const del = async (db: Database, key: string) => {
   return await db.transaction().execute(async (trx) => {
     const i = await trx.selectFrom("item").selectAll().where("uri", "=", key).executeTakeFirstOrThrow();
     const imageIds = (JSON.parse(i.image) as number[]);
@@ -87,7 +87,7 @@ export const del = async (db: Kysely<DatabaseSchema>, key: string) => {
   })
 }
 
-export const update = async (db: Kysely<DatabaseSchema>, key: string, item: Item) => {
+export const update = async (db: Database, key: string, item: Item) => {
   return await db.transaction().execute(async (trx) => {
     // Delete old item
     const i = await trx.selectFrom("item").selectAll().where("uri", "=", key).executeTakeFirstOrThrow();

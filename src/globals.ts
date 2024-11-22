@@ -1,7 +1,7 @@
 import { Firehose } from '@atproto/sync';
 import { IdResolver, MemoryCache } from '@atproto/identity';
 import * as env from '#/env';
-import { createSQLiteDb, createPostgresDb, migrateToLatest } from './db/db';
+import { createSQLiteDb, createPostgresDb } from './db/db';
 import { createClient } from './auth/client';
 import type { NodeOAuthClient } from '@atproto/oauth-client-node';
 import * as ItemRecord from '#/lexicon/types/app/gstand/unstable/store/item.ts';

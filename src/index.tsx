@@ -4,7 +4,7 @@ import { migrateToLatest } from '#/db/db.ts';
 import * as globals from '#/globals.ts';
 import { server } from "#/routes.ts";
 
-migrateToLatest(globals.db);
+migrateToLatest(globals.db, env.dbType);
 if (env.firehoseRelay !== "") {
   globals.firehose.start();
 }
