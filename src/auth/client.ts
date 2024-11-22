@@ -6,7 +6,7 @@ import type {
   NodeSavedState,
   NodeSavedStateStore,
 } from '@atproto/oauth-client-node';
-import type { Database } from '#/db.ts';
+import type { Database } from '#/db/db.ts';
 
 export const createClient = async (db: Database) => {
   const enc = encodeURIComponent;
