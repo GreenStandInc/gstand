@@ -8,3 +8,14 @@ services:
     container_name: gstand
     ports:
       - 3000:3000
+
+# Design taken from: https://cprimozic.net/notes/posts/notes-on-self-hosting-bluesky-pds-alongside-other-services/
+# pds:
+#   image: ghcr.io/bluesky-social/pds:0.4
+#   container_name: pds
+#   volumes:
+#     - ./pds:/pds
+#   ports:
+#     - 6010:3000
+#   env_file:
+#     - ./pds/pds.env
