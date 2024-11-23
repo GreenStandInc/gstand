@@ -142,4 +142,3 @@ if (env.loglevel !== "none") {
 }
 
 export type AppType = typeof server;
-export const _private = { getSessionAgent };

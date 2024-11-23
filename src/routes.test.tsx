@@ -1,4 +1,4 @@
-import { test, expect, jest, beforeEach } from '@jest/globals';
+import { test, expect, jest, beforeEach, describe } from '@jest/globals';
 import { testClient } from 'hono/testing';
 import { createSQLiteDb } from './db/db';
 import * as fsp from 'fs/promises';
@@ -6,6 +6,19 @@ import * as os from 'os';
 import * as path from 'path';
 
 let sessionCookie: { did?: string, save: () => any, destroy: () => any };
+const dir = await fsp.mkdtemp(path.join(os.tmpdir(), "gstand-"));
+
+jest.unstable_mockModule('@atproto/api', () => ({
+  Agent: class Agent {
+    constructor(private session: { did: string }) { }
+    getProfile() {
+      return {
+        success: true,
+        data: {did: this.session.did},
+      };
+    }
+  }
+}));
 
 jest.unstable_mockModule('iron-session', () => ({
   getIronSession: jest.fn(() => sessionCookie),
@@ -17,8 +30,6 @@ jest.unstable_mockModule('#/env', () => ({
   secret: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
 }))
 
-const dir = await fsp.mkdtemp(path.join(os.tmpdir(), "gstand-"));
-
 jest.unstable_mockModule('#/globals', () => ({
   oauthClient: {
     authorize: jest.fn((handle) => handle),
@@ -26,6 +37,8 @@ jest.unstable_mockModule('#/globals', () => ({
     callback: jest.fn((params: URLSearchParams) => ({
       session: { did: params.get("did") }
     })),
+    restore: jest.fn((did: string) =>
+      did === sessionCookie.did ? sessionCookie : undefined),
   },
   db: createSQLiteDb(path.join(dir, "test.db")),
 }))
@@ -39,8 +52,8 @@ let client = testClient(server);
 
 beforeEach(async () => {
   client = testClient(server);
-  sessionCookie = { 
-    save: jest.fn(), 
+  sessionCookie = {
+    save: jest.fn(),
     destroy: jest.fn(() => sessionCookie.did = undefined),
   };
 })
@@ -78,4 +91,22 @@ test("logout", async () => {
   expect(res.status).toEqual(302);
   expect(res.headers.get("location")).toEqual("/");
   expect(sessionCookie.did).toBeUndefined();
+})
+
+test("notloggedin", async () => {
+  const res = await client.api.profile.$get();
+  expect(res.status).toEqual(401);
+})
+
+describe("Once Logged In", () => {
+  beforeEach(() => {
+    sessionCookie.did = "thedid";
+  })
+
+  test('profile', async () => {
+    const res = await client.api.profile.$get();
+    expect(res.ok).toEqual(true);
+    const profile: {did: string} = await res.json();
+    expect(profile.did).toEqual("thedid");
+  })
 })

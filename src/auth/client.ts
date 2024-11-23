@@ -52,7 +52,6 @@ class StateStore implements NodeSavedStateStore {
   }
 }
 
-// TODO, don't do it in memory!
 class SessionStore implements NodeSavedSessionStore {
   constructor(private db: Database) { }
   async get(key: string): Promise<NodeSavedSession | undefined> {
