@@ -53,4 +53,6 @@ export const firehose = new Firehose({
     console.error(err);
   },
   filterCollections: [Item.RecordPath],
+  excludeIdentity: true,
+  excludeAccount: true,
 })

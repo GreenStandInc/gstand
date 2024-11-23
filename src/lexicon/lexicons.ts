@@ -55,22 +55,18 @@ export const schemaDict = {
     id: 'app.gstand.unstable.store.payment',
     defs: {
       main: {
-        type: 'record',
+        type: 'object',
         description: 'A payment type for an item',
-        key: 'tid',
-        record: {
-          type: 'object',
-          properties: {
-            price: {
-              type: 'integer',
-              minimum: 0,
-            },
-            currency: {
-              type: 'string',
-            },
-            provider: {
-              type: 'string',
-            },
+        properties: {
+          price: {
+            type: 'integer',
+            minimum: 0,
+          },
+          currency: {
+            type: 'string',
+          },
+          provider: {
+            type: 'string',
           },
         },
       },

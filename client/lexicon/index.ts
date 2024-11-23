@@ -59,13 +59,11 @@ export class AppGstandUnstableNS {
 export class AppGstandUnstableStoreNS {
   _client: XrpcClient
   item: ItemRecord
-  payment: PaymentRecord
   shop: ShopRecord
 
   constructor(client: XrpcClient) {
     this._client = client
     this.item = new ItemRecord(client)
-    this.payment = new PaymentRecord(client)
     this.shop = new ShopRecord(client)
   }
 }
@@ -130,71 +128,6 @@ export class ItemRecord {
       'com.atproto.repo.deleteRecord',
       undefined,
       { collection: 'app.gstand.unstable.store.item', ...params },
-      { headers },
-    )
-  }
-}
-
-export class PaymentRecord {
-  _client: XrpcClient
-
-  constructor(client: XrpcClient) {
-    this._client = client
-  }
-
-  async list(
-    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
-  ): Promise<{
-    cursor?: string
-    records: { uri: string; value: AppGstandUnstableStorePayment.Record }[]
-  }> {
-    const res = await this._client.call('com.atproto.repo.listRecords', {
-      collection: 'app.gstand.unstable.store.payment',
-      ...params,
-    })
-    return res.data
-  }
-
-  async get(
-    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
-  ): Promise<{
-    uri: string
-    cid: string
-    value: AppGstandUnstableStorePayment.Record
-  }> {
-    const res = await this._client.call('com.atproto.repo.getRecord', {
-      collection: 'app.gstand.unstable.store.payment',
-      ...params,
-    })
-    return res.data
-  }
-
-  async create(
-    params: Omit<
-      ComAtprotoRepoCreateRecord.InputSchema,
-      'collection' | 'record'
-    >,
-    record: AppGstandUnstableStorePayment.Record,
-    headers?: Record<string, string>,
-  ): Promise<{ uri: string; cid: string }> {
-    record.$type = 'app.gstand.unstable.store.payment'
-    const res = await this._client.call(
-      'com.atproto.repo.createRecord',
-      undefined,
-      { collection: 'app.gstand.unstable.store.payment', ...params, record },
-      { encoding: 'application/json', headers },
-    )
-    return res.data
-  }
-
-  async delete(
-    params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
-    headers?: Record<string, string>,
-  ): Promise<void> {
-    await this._client.call(
-      'com.atproto.repo.deleteRecord',
-      undefined,
-      { collection: 'app.gstand.unstable.store.payment', ...params },
       { headers },
     )
   }

@@ -2,7 +2,7 @@ import * as env from '#/env.ts';
 import { serve } from '@hono/node-server';
 import { migrateToLatest } from '#/db/db.ts';
 import * as globals from '#/globals.ts';
-import { server } from "#/routes.ts";
+import { server } from "#/routes.tsx";
 
 migrateToLatest(globals.db, env.dbType);
 if (env.firehoseRelay !== "") {

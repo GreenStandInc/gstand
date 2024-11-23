@@ -6,14 +6,15 @@ import { lexicons } from '../../../../../lexicons'
 import { isObj, hasProp } from '../../../../../util'
 import { CID } from 'multiformats/cid'
 
-export interface Record {
+/** A payment type for an item */
+export interface Main {
   price?: number
   currency?: string
   provider?: string
   [k: string]: unknown
 }
 
-export function isRecord(v: unknown): v is Record {
+export function isMain(v: unknown): v is Main {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
@@ -22,6 +23,6 @@ export function isRecord(v: unknown): v is Record {
   )
 }
 
-export function validateRecord(v: unknown): ValidationResult {
+export function validateMain(v: unknown): ValidationResult {
   return lexicons.validate('app.gstand.unstable.store.payment#main', v)
 }
