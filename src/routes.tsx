@@ -129,11 +129,13 @@ export const server = new Hono()
       await clientSession.save();
       return c.redirect("/");
     } catch (err) {
-      //server.log.error(err);
-      console.error(err);
+      if (env.loglevel !== "none") {
+        console.error(err);
+      }
       return c.redirect("/?error");
     }
   });
+
 
 if (env.loglevel !== "none") {
   server.use(logger());

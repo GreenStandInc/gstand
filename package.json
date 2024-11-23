@@ -9,7 +9,8 @@
     "build": "tsup",
     "start": "node dist/index.esm.js",
     "lexgen": "lex gen-server ./src/lexicon ./lexicons/* --yes && lex gen-api ./client/lexicon ./lexicons/* --yes",
-    "test": "node --no-warnings --experimental-vm-modules node_modules/jest/bin/jest.js"
+    "test": "node --no-warnings --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "test-cover": "node --no-warnings --experimental-vm-modules node_modules/jest/bin/jest.js --coverage"
   },
   "devDependencies": {
     "@atproto/lex-cli": "^0.5.2",

@@ -7,6 +7,7 @@ import * as Item from "./item.ts";
 import * as Image from "./image.ts";
 import { beforeAll, describe, expect, test } from '@jest/globals';
 import { Database } from './db.ts';
+import * as ItemRecord from '#/lexicon/types/app/gstand/unstable/store/item.ts'
 
 let db: Database;
 
@@ -21,6 +22,13 @@ test('create', async () => {
   const o = Item.create({ uri: "" });
   expect(i).toEqual(o);
 });
+
+test('toRecord', () => {
+  const i = Item.create();
+  const o = Item.toRecord(i);
+  expect(ItemRecord.isRecord(o)).toEqual(true);
+  expect(ItemRecord.validateRecord(o).success).toEqual(true);
+})
 
 test('insert', async () => {
   const i = Item.create({ uri: "insertTest" });
