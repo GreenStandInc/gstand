@@ -2,16 +2,30 @@ import type { Kysely } from "kysely";
 import { recordPrefix } from "./record";
 import * as Image from './image';
 import * as ItemRecord from '#/lexicon/types/app/gstand/unstable/store/item.ts';
+import * as Payment from "#/lexicon/types/app/gstand/unstable/store/payment.ts";
 import type { Database } from "./db";
+import type { BlobRef } from "@atproto/lexicon";
 
 export const RecordPath = recordPrefix + ".store.item";
 
+export const getClient = async (db: Database, key: string): Promise<Client> => {
+  const i = await db.selectFrom("item").selectAll().where('uri', '=', key).executeTakeFirstOrThrow();
+  return {...i, image: JSON.parse(i.image) as string[]};
+}
 export type Item = {
   uri: string;
   sellerDid: string;
   name: string;
   description: string;
   image: Image.Image[];
+}
+
+export type Client = {
+  uri: string;
+  sellerDid: string;
+  name: string;
+  description: string;
+  image: string[];
 }
 
 export type Table = {
@@ -22,14 +36,27 @@ export type Table = {
   image: string;
 }
 
-export const toRecord = (i: Item): ItemRecord.Record => {
+export const toRecord = (i: Item, {
+  image = [],
+  payment = [],
+}: {
+  image?: BlobRef[],
+  payment?: Payment.Main[],
+} = {}): ItemRecord.Record => {
   return {
     $type: RecordPath,
     name: i.name,
     description: i.description,
-    image: [],
-    payment: [],
+    image,
+    payment,
   }
+}
+
+export const toClient = (i: Item): Client => {
+  return {...i, 
+    image: i.image.map((i) => i.id)
+    .filter((i) => i !== undefined)
+    .map((i) => i.toString())};
 }
 
 export const create = ({

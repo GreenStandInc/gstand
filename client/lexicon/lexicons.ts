@@ -45,6 +45,14 @@ export const schemaDict = {
                 ref: 'lex:app.gstand.unstable.store.payment',
               },
             },
+            createdAt: {
+              type: 'string',
+              format: 'datetime',
+            },
+            updatedAt: {
+              type: 'string',
+              format: 'datetime',
+            },
           },
         },
       },

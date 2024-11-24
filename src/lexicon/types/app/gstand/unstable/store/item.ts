@@ -15,6 +15,8 @@ export interface Record {
   stock?: number
   /** Prices for the item */
   payment: AppGstandUnstableStorePayment.Main[]
+  createdAt?: string
+  updatedAt?: string
   [k: string]: unknown
 }
 

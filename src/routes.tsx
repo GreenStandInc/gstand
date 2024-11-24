@@ -83,7 +83,7 @@ export const server = new Hono()
       res = await agent.com.atproto.repo.putRecord({
         repo: agent.assertDid,
         collection: Item.RecordPath,
-        record: { ...Item.toRecord(i), images: uploadedImages },
+        record: Item.toRecord(i, {image: uploadedImages}),
         rkey: TID.nextStr(),
       });
     } catch (e) {

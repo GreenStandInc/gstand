@@ -30,6 +30,14 @@ test('toRecord', () => {
   expect(ItemRecord.validateRecord(o).success).toEqual(true);
 })
 
+test('toClient', () => {
+  const i = Item.create({
+    image: [Image.create({ id: 1 }), Image.create({ id: 2 })],
+  });
+  const o = Item.toClient(i);
+  expect(o).toEqual({...i, image: ["1", "2"]});
+})
+
 test('insert', async () => {
   const i = Item.create({ uri: "insertTest" });
   const res = await Item.insert(db, i);
@@ -71,7 +79,11 @@ test("insertWithImage", async () => {
   });
   await Item.insert(db, i);
   const o = await Item.get(db, "insertWithImageTest");
-  expect(o).toEqual(i);
+  expect(o.image).toHaveLength(2);
+  expect(o.image[0].data).toEqual(Buffer.from([1, 2, 3]))
+  expect(o.image[0].id).toBeDefined();
+  expect(o.image[1].data).toEqual(Buffer.from([7, 8, 9]))
+  expect(o.image[1].id).toBeDefined();
 });
 
 test("updateWithImage", async () => {
@@ -86,5 +98,7 @@ test("updateWithImage", async () => {
   await Item.update(db, "updateWithImageTest", u);
   const o = await Item.get(db, "updateWithImageTest");
   expect(u).not.toEqual(i);
-  expect(o).toEqual(u);
+  expect(o.image).toHaveLength(1);
+  expect(o.image[0].data).toEqual(Buffer.from([7, 8, 9]))
+  expect(o.image[0].id).toBeDefined();
 });
