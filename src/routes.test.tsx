@@ -19,10 +19,14 @@ jest.unstable_mockModule('@atproto/api', () => ({
     public com = {
       atproto: {
         repo: {
-          putRecord: async (rec: any) => {
+          uploadBlob: jest.fn(async (data: any) => {
             const key = randomBytes(9).toString('base64');
             return { data: { uri: key } };
-          }
+          }),
+          putRecord: jest.fn(async (rec: any) => {
+            const key = randomBytes(9).toString('base64');
+            return { data: { uri: key } };
+          }),
         }
       }
     }
@@ -144,5 +148,22 @@ describe("Once Logged In", () => {
     expect(data.description).toEqual("My Description");
     const inDb = await Item.get(globals.db, data.uri);
     expect(data).toEqual(inDb);
-  })
+  });
+
+  test("addItemWithPicture", async () => {
+    const res = await client.api.addItem.$post({
+      'form': {
+        name: "Item",
+        description: "My Description",
+        image: new File([Buffer.from([1,2,3])], "foo.png", {type: "image/png"}),
+      }
+    });
+    expect(res.ok).toEqual(true);
+    const data = await res.json();
+    expect(data.image).toHaveLength(1);
+    const inDb = await Item.get(globals.db, data.uri);
+    expect(inDb.image).toHaveLength(1);
+    expect(inDb.image[0].type).toEqual('image/png');
+    expect(inDb.image[0].data).toEqual(Buffer.from([1,2,3]));
+  });
 })

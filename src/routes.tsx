@@ -5,7 +5,8 @@ import * as env from '#/env';
 import { oauthClient, db } from '#/globals';
 import { serveStatic } from '@hono/node-server/serve-static';
 import { logger } from 'hono/logger';
-import * as Item from '#/db/item.ts';
+import * as Item from '#/db/item';
+import * as Image from '#/db/image';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
 import { HTTPException } from 'hono/http-exception';
@@ -61,12 +62,15 @@ export const server = new Hono()
     image: z.union([z.string(), z.instanceof(File)]),
   })), async (c) => {
     const fData = c.req.valid('form');
-    const i: Item.Item = {
-      ...Item.create(),
+    const images: File[] = fData.image === "" ? [] : [(fData.image as File)];
+    const i = Item.create({
       name: fData.name,
       description: fData.description,
-    }
-    const images: File[] = fData.image === "" ? [] : [(fData.image as File)];
+      image: fData.image === "" ? [] : await Promise.all(images.map(async (i) => Image.create({
+        type: i.type,
+        data: Buffer.from(await i.arrayBuffer()),
+      })))
+    })
     const agent = await login(c);
 
     const uploadedImages = await Promise.all(images.map(async (f) => {
@@ -83,7 +87,7 @@ export const server = new Hono()
         rkey: TID.nextStr(),
       });
     } catch (e) {
-      if(env.loglevel !== "none") {
+      if (env.loglevel !== "none") {
         console.error("Failed to write record");
         console.error(e);
       }
@@ -95,7 +99,7 @@ export const server = new Hono()
       i.sellerDid = agent.assertDid;
       await Item.insert(db, i);
     } catch (e) {
-      if(env.loglevel !== "none") {
+      if (env.loglevel !== "none") {
         console.error("Failed to update database");
         console.error(e)
       }
