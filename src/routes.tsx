@@ -29,6 +29,12 @@ const getSessionAgent = async (c: Context) => {
   }
 }
 
+const login = async (c: Context) => {
+  const agent = await getSessionAgent(c);
+  if (!agent) throw new HTTPException(401, { message: "Not logged in" });
+  return agent;
+}
+
 export const server = new Hono()
   .use("/assets/*", serveStatic({
     root: "./client/dist",
@@ -37,7 +43,7 @@ export const server = new Hono()
 
 
   })).get("/api/profile", async (c) => {
-    const agent = await getSessionAgent(c);
+    const agent = await login(c);
     if (!agent) throw new HTTPException(401, { message: "Not logged in" });
     const { success, data } = await agent.getProfile({ actor: agent.assertDid });
     if (!success) throw new HTTPException(401, { message: "Invalid profile" });
@@ -61,34 +67,39 @@ export const server = new Hono()
       description: fData.description,
     }
     const images: File[] = fData.image === "" ? [] : [(fData.image as File)];
-    const agent = await getSessionAgent(c);
-    if (!agent) throw new HTTPException(401, { message: "Not logged in" });
+    const agent = await login(c);
 
     const uploadedImages = await Promise.all(images.map(async (f) => {
       const res = await agent.com.atproto.repo.uploadBlob(f);
       return res.data.blob;
     }));
 
+    let res;
     try {
-      const res = await agent.com.atproto.repo.putRecord({
+      res = await agent.com.atproto.repo.putRecord({
         repo: agent.assertDid,
         collection: Item.RecordPath,
         record: { ...Item.toRecord(i), images: uploadedImages },
         rkey: TID.nextStr(),
-      })
-      const uri = res.data.uri;
-      try {
-        i.uri = uri;
-        i.sellerDid = agent.assertDid;
-        await Item.insert(db, i);
-      } catch (e) {
+      });
+    } catch (e) {
+      if(env.loglevel !== "none") {
+        console.error("Failed to write record");
+        console.error(e);
+      }
+      throw new HTTPException(500, { message: "Failed to write record" });
+    }
+    const uri = res.data.uri;
+    try {
+      i.uri = uri;
+      i.sellerDid = agent.assertDid;
+      await Item.insert(db, i);
+    } catch (e) {
+      if(env.loglevel !== "none") {
         console.error("Failed to update database");
         console.error(e)
       }
-    } catch (e) {
-      console.error("Failed to write record");
-      console.error(e);
-      throw new HTTPException(500, { message: "Failed to write record" });
+      throw new HTTPException(500, { message: "Failed to update database" });
     }
     return c.json(i);
 

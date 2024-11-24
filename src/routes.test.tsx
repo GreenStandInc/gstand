@@ -1,20 +1,35 @@
-import { test, expect, jest, beforeEach, describe } from '@jest/globals';
+import { test, expect, jest, beforeAll, beforeEach, describe } from '@jest/globals';
 import { testClient } from 'hono/testing';
-import { createSQLiteDb } from './db/db';
-import * as fsp from 'fs/promises';
-import * as os from 'os';
-import * as path from 'path';
+import { createSQLiteDb, migrateToLatest } from '#/db/db';
+import * as Item from '#/db/item';
+import { randomBytes } from 'node:crypto';
 
-let sessionCookie: { did?: string, save: () => any, destroy: () => any };
-const dir = await fsp.mkdtemp(path.join(os.tmpdir(), "gstand-"));
+let sessionCookie: {
+  did?: string,
+  save: () => any,
+  destroy: () => any
+};
 
 jest.unstable_mockModule('@atproto/api', () => ({
   Agent: class Agent {
-    constructor(private session: { did: string }) { }
+    private assertDid: string;
+    constructor(private session: { did: string }) {
+      this.assertDid = session.did;
+    }
+    public com = {
+      atproto: {
+        repo: {
+          putRecord: async (rec: any) => {
+            const key = randomBytes(9).toString('base64');
+            return { data: { uri: key } };
+          }
+        }
+      }
+    }
     getProfile() {
       return {
         success: true,
-        data: {did: this.session.did},
+        data: { did: this.session.did },
       };
     }
   }
@@ -40,7 +55,7 @@ jest.unstable_mockModule('#/globals', () => ({
     restore: jest.fn((did: string) =>
       did === sessionCookie.did ? sessionCookie : undefined),
   },
-  db: createSQLiteDb(path.join(dir, "test.db")),
+  db: createSQLiteDb(),
 }))
 
 const ironSession = await import("iron-session");
@@ -49,6 +64,10 @@ const globals = await import('#/globals');
 const { server } = await import('./routes');
 
 let client = testClient(server);
+
+beforeAll(async () => {
+  migrateToLatest(globals.db, "sqlite");
+})
 
 beforeEach(async () => {
   client = testClient(server);
@@ -106,7 +125,24 @@ describe("Once Logged In", () => {
   test('profile', async () => {
     const res = await client.api.profile.$get();
     expect(res.ok).toEqual(true);
-    const profile: {did: string} = await res.json();
+    const profile: { did: string } = await res.json();
     expect(profile.did).toEqual("thedid");
+  })
+
+  test('additem', async () => {
+    const res = await client.api.addItem.$post({
+      'form': {
+        name: "Item",
+        description: "My Description",
+        image: "",
+      }
+    });
+    expect(res.ok).toEqual(true);
+    const data = await res.json();
+    expect(data.sellerDid).toEqual("thedid");
+    expect(data.name).toEqual("Item");
+    expect(data.description).toEqual("My Description");
+    const inDb = await Item.get(globals.db, data.uri);
+    expect(data).toEqual(inDb);
   })
 })

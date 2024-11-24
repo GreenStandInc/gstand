@@ -83,10 +83,10 @@ const migrationProvider = (dbType: string): MigrationProvider => {
 
 export type Database = Kysely<DatabaseSchema>
 
-export const createSQLiteDb = (location: string) => {
+export const createSQLiteDb = (location?: string) => {
   return new Kysely<DatabaseSchema>({
     dialect: new SqliteDialect({
-      database: new SQLiteDb(location),
+      database: new SQLiteDb(location ?? ":memory:"),
     }),
   });
 }
