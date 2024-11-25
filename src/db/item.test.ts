@@ -52,6 +52,13 @@ test('query', async () => {
   await Item.insert(db, i);
   const res = await Item.get(db, "queryTest");
   expect(res).toEqual(i);
+  const resClient = await Item.getClient(db, "queryTest");
+  expect(resClient.name).toEqual(res.name);
+  expect(resClient.description).toEqual(res.description);
+  expect(resClient.uri).toEqual(res.uri);
+  expect(resClient.sellerDid).toEqual(res.sellerDid);
+  expect(resClient.createdAt).toEqual(res.createdAt.getTime());
+  expect(resClient.updatedAt).toEqual(res.updatedAt.getTime());
 });
 
 test('delete', async () => {
