@@ -1,4 +1,3 @@
-import type { Kysely } from "kysely";
 import { recordPrefix } from "./record";
 import * as Image from './image';
 import * as ItemRecord from '#/lexicon/types/app/gstand/unstable/store/item.ts';
@@ -10,7 +9,7 @@ export const RecordPath = recordPrefix + ".store.item";
 
 export const getClient = async (db: Database, key: string): Promise<Client> => {
   const i = await db.selectFrom("item").selectAll().where('uri', '=', key).executeTakeFirstOrThrow();
-  return {...i, image: JSON.parse(i.image) as string[]};
+  return { ...i, image: JSON.parse(i.image) as string[] };
 }
 export type Item = {
   uri: string;
@@ -53,10 +52,12 @@ export const toRecord = (i: Item, {
 }
 
 export const toClient = (i: Item): Client => {
-  return {...i, 
+  return {
+    ...i,
     image: i.image.map((i) => i.id)
-    .filter((i) => i !== undefined)
-    .map((i) => i.toString())};
+      .filter((i) => i !== undefined)
+      .map((i) => i.toString())
+  };
 }
 
 export const create = ({
@@ -84,7 +85,7 @@ export const create = ({
 export const insert = async (db: Database, item: Item) => {
   return await db.transaction().execute(async (trx) => {
     const imageIds = await Promise.all(item.image.map(async (i) => {
-      return (await trx.insertInto('image').values(i).execute())[0].insertId?.toString();
+      return (await trx.insertInto('image').values({ type: i.type, data: i.data }).execute())[0].insertId?.toString();
     }));
     return await trx.insertInto('item')
       .values({ ...item, image: JSON.stringify(imageIds) })
@@ -100,7 +101,7 @@ export const insert = async (db: Database, item: Item) => {
 
 export const get = async (db: Database, key: string): Promise<Item> => {
   const i = await db.selectFrom("item").selectAll().where("uri", "=", key).executeTakeFirstOrThrow();
-  const image_ids = (JSON.parse(i.image) as number[]);
+  const image_ids = (JSON.parse(i.image) as bigint[]);
   const image = await db.selectFrom('image').selectAll().where('id', 'in', image_ids).execute();
   return { ...i, image: image.map(Image.create) };
 }
@@ -108,7 +109,7 @@ export const get = async (db: Database, key: string): Promise<Item> => {
 export const del = async (db: Database, key: string) => {
   return await db.transaction().execute(async (trx) => {
     const i = await trx.selectFrom("item").selectAll().where("uri", "=", key).executeTakeFirstOrThrow();
-    const imageIds = (JSON.parse(i.image) as number[]);
+    const imageIds = (JSON.parse(i.image) as bigint[]);
     await trx.deleteFrom('image').where('id', 'in', imageIds).execute();
     return await trx.deleteFrom('item').where('uri', '=', key).execute();
   })
@@ -118,12 +119,12 @@ export const update = async (db: Database, key: string, item: Item) => {
   return await db.transaction().execute(async (trx) => {
     // Delete old item
     const i = await trx.selectFrom("item").selectAll().where("uri", "=", key).executeTakeFirstOrThrow();
-    const imageIds = (JSON.parse(i.image) as number[]);
+    const imageIds = (JSON.parse(i.image) as bigint[]);
     await trx.deleteFrom('image').where('id', 'in', imageIds).execute();
     await trx.deleteFrom('item').where('uri', '=', key).execute();
     // Insert new item
     const newImageIds = await Promise.all(item.image.map(async (i) => {
-      return (await trx.insertInto('image').values(i).execute())[0].insertId?.toString();
+      return (await trx.insertInto('image').values({ type: i.type, data: i.data }).execute())[0].insertId?.toString();
     }));
     return await trx.insertInto('item').values({ ...item, image: JSON.stringify(newImageIds) }).execute();
   })

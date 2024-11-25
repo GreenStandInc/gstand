@@ -56,6 +56,12 @@ export const server = new Hono()
     return c.json(items.map((i) => { return { ...i, image: [] } }));
 
 
+  }).get("/api/image/:id", async (c) => {
+    const id = c.req.param('id');
+    const ret = await Image.get(db, BigInt(id));
+    return new Response(ret.data, { status: 200, headers: { 'content-type': ret.type } })
+
+
   }).post("/api/addItem", zValidator("form", z.object({
     name: z.string(),
     description: z.string(),
@@ -83,7 +89,7 @@ export const server = new Hono()
       res = await agent.com.atproto.repo.putRecord({
         repo: agent.assertDid,
         collection: Item.RecordPath,
-        record: Item.toRecord(i, {image: uploadedImages}),
+        record: Item.toRecord(i, { image: uploadedImages }),
         rkey: TID.nextStr(),
       });
     } catch (e) {
@@ -94,10 +100,12 @@ export const server = new Hono()
       throw new HTTPException(500, { message: "Failed to write record" });
     }
     const uri = res.data.uri;
+    let ret;
     try {
       i.uri = uri;
       i.sellerDid = agent.assertDid;
-      await Item.insert(db, i);
+      const [{ insertId }] = await Item.insert(db, i);
+      ret = await Item.get(db, uri);
     } catch (e) {
       if (env.loglevel !== "none") {
         console.error("Failed to update database");
@@ -105,7 +113,7 @@ export const server = new Hono()
       }
       throw new HTTPException(500, { message: "Failed to update database" });
     }
-    return c.json(i);
+    return c.json(Item.toClient(ret));
 
 
   }).post("/login", zValidator("form", z.object({

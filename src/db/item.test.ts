@@ -32,7 +32,7 @@ test('toRecord', () => {
 
 test('toClient', () => {
   const i = Item.create({
-    image: [Image.create({ id: 1 }), Image.create({ id: 2 })],
+    image: [Image.create({ id: 1n }), Image.create({ id: 2n })],
   });
   const o = Item.toClient(i);
   expect(o).toEqual({...i, image: ["1", "2"]});

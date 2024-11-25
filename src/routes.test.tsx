@@ -155,7 +155,7 @@ describe("Once Logged In", () => {
       'form': {
         name: "Item",
         description: "My Description",
-        image: new File([Buffer.from([1,2,3])], "foo.png", {type: "image/png"}),
+        image: new File([Buffer.from([1, 2, 3])], "foo.png", { type: "image/png" }),
       }
     });
     expect(res.ok).toEqual(true);
@@ -164,6 +164,28 @@ describe("Once Logged In", () => {
     const inDb = await Item.get(globals.db, data.uri);
     expect(inDb.image).toHaveLength(1);
     expect(inDb.image[0].type).toEqual('image/png');
-    expect(inDb.image[0].data).toEqual(Buffer.from([1,2,3]));
+    expect(inDb.image[0].data).toEqual(Buffer.from([1, 2, 3]));
+    expect(inDb.image[0].id).toEqual(data.image[0]);
   });
+
+  test('getPicture', async () => {
+    const imgBuff = Buffer.from([1, 2, 3]);
+    const res = await client.api.addItem.$post({
+      'form': {
+        name: "Item",
+        description: "My Description",
+        image: new File([imgBuff], "foo.png", { type: "image/png" }),
+      }
+    });
+    expect(res.ok).toEqual(true);
+    const data = await res.json();
+    expect(data.image).toHaveLength(1);
+    const imageId = data.image[0];
+    const imRes = await client.api.image[':id'].$get({ param: { id: imageId } });
+    expect(imRes.headers.get('content-type')).toEqual("image/png");
+    expect(imRes.body).not.toBeNull();
+    if (imRes.body === null) throw Error("imRes is null");
+    const out = Buffer.from(await new Response(imRes.body).arrayBuffer());
+    expect(out).toEqual(imgBuff);
+  })
 })
