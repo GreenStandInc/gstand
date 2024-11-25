@@ -51,6 +51,8 @@ const migrations = (dbType: string): Record<string, Migration> => {
           .addColumn('name', 'varchar', (col) => col.notNull())
           .addColumn('description', 'varchar', (col) => col.notNull())
           .addColumn('image', 'varchar', (col) => col.notNull())
+          .addColumn('createdAt', 'integer', (col) => col.notNull())
+          .addColumn('updatedAt', 'integer', (col) => col.notNull())
           .execute();
 
         await db.schema.createTable('auth_session')

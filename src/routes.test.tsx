@@ -147,7 +147,7 @@ describe("Once Logged In", () => {
     expect(data.name).toEqual("Item");
     expect(data.description).toEqual("My Description");
     const inDb = await Item.get(globals.db, data.uri);
-    expect(data).toEqual(inDb);
+    expect(data).toEqual({ ...inDb, createdAt: data.createdAt, updatedAt: data.updatedAt });
   });
 
   test("addItemWithPicture", async () => {

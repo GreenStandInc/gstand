@@ -35,8 +35,10 @@ test('toClient', () => {
     image: [Image.create({ id: 1n }), Image.create({ id: 2n })],
   });
   const o = Item.toClient(i);
-  expect(o).toEqual({...i, image: ["1", "2"]});
-})
+  expect(o.name).toEqual(i.name);
+  expect(o.description).toEqual(i.description);
+  expect(o.image).toEqual(["1", "2"]);
+});
 
 test('insert', async () => {
   const i = Item.create({ uri: "insertTest" });

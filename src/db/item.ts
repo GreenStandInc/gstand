@@ -7,16 +7,14 @@ import type { BlobRef } from "@atproto/lexicon";
 
 export const RecordPath = recordPrefix + ".store.item";
 
-export const getClient = async (db: Database, key: string): Promise<Client> => {
-  const i = await db.selectFrom("item").selectAll().where('uri', '=', key).executeTakeFirstOrThrow();
-  return { ...i, image: JSON.parse(i.image) as string[] };
-}
 export type Item = {
   uri: string;
   sellerDid: string;
   name: string;
   description: string;
   image: Image.Image[];
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export type Client = {
@@ -25,6 +23,8 @@ export type Client = {
   name: string;
   description: string;
   image: string[];
+  createdAt: number;
+  updatedAt: number;
 }
 
 export type Table = {
@@ -33,6 +33,8 @@ export type Table = {
   name: string;
   description: string;
   image: string;
+  createdAt: number;
+  updatedAt: number;
 }
 
 export const toRecord = (i: Item, {
@@ -46,6 +48,8 @@ export const toRecord = (i: Item, {
     $type: RecordPath,
     name: i.name,
     description: i.description,
+    createdAt: i.createdAt.toISOString(),
+    updatedAt: i.updatedAt.toISOString(),
     image,
     payment,
   }
@@ -54,6 +58,8 @@ export const toRecord = (i: Item, {
 export const toClient = (i: Item): Client => {
   return {
     ...i,
+    createdAt: i.createdAt.getTime(),
+    updatedAt: i.updatedAt.getTime(),
     image: i.image.map((i) => i.id)
       .filter((i) => i !== undefined)
       .map((i) => i.toString())
@@ -65,13 +71,17 @@ export const create = ({
   sellerDid = "",
   name = "",
   description = "",
-  image = []
+  image = [],
+  createdAt = new Date(),
+  updatedAt = new Date(),
 }: {
   uri?: string,
   sellerDid?: string,
   name?: string,
   description?: string,
   image?: Array<Image.Image>,
+  createdAt?: Date,
+  updatedAt?: Date,
 } = {}): Item => {
   return {
     uri,
@@ -79,6 +89,8 @@ export const create = ({
     name,
     description,
     image,
+    createdAt,
+    updatedAt,
   }
 }
 
@@ -88,7 +100,12 @@ export const insert = async (db: Database, item: Item) => {
       return (await trx.insertInto('image').values({ type: i.type, data: i.data }).execute())[0].insertId?.toString();
     }));
     return await trx.insertInto('item')
-      .values({ ...item, image: JSON.stringify(imageIds) })
+      .values({
+        ...item,
+        createdAt: item.createdAt.getTime(),
+        updatedAt: item.updatedAt.getTime(),
+        image: JSON.stringify(imageIds)
+      })
       .execute();
   })
   // TODO, add ability to auto update, using:
@@ -103,7 +120,17 @@ export const get = async (db: Database, key: string): Promise<Item> => {
   const i = await db.selectFrom("item").selectAll().where("uri", "=", key).executeTakeFirstOrThrow();
   const image_ids = (JSON.parse(i.image) as bigint[]);
   const image = await db.selectFrom('image').selectAll().where('id', 'in', image_ids).execute();
-  return { ...i, image: image.map(Image.create) };
+  return {
+    ...i,
+    createdAt: new Date(i.createdAt),
+    updatedAt: new Date(i.updatedAt),
+    image: image.map(Image.create)
+  };
+}
+
+export const getClient = async (db: Database, key: string): Promise<Client> => {
+  const i = await db.selectFrom("item").selectAll().where('uri', '=', key).executeTakeFirstOrThrow();
+  return { ...i, image: JSON.parse(i.image) as string[] };
 }
 
 export const del = async (db: Database, key: string) => {
@@ -126,6 +153,12 @@ export const update = async (db: Database, key: string, item: Item) => {
     const newImageIds = await Promise.all(item.image.map(async (i) => {
       return (await trx.insertInto('image').values({ type: i.type, data: i.data }).execute())[0].insertId?.toString();
     }));
-    return await trx.insertInto('item').values({ ...item, image: JSON.stringify(newImageIds) }).execute();
+    return await trx.insertInto('item').values({
+      ...item,
+      createdAt: item.createdAt.getTime(),
+      updatedAt: item.updatedAt.getTime(),
+      image: JSON.stringify(newImageIds)
+    })
+      .execute();
   })
 }

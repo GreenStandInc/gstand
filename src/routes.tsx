@@ -45,7 +45,6 @@ export const server = new Hono()
 
   })).get("/api/profile", async (c) => {
     const agent = await login(c);
-    if (!agent) throw new HTTPException(401, { message: "Not logged in" });
     const { success, data } = await agent.getProfile({ actor: agent.assertDid });
     if (!success) throw new HTTPException(401, { message: "Invalid profile" });
     return c.json(data);
