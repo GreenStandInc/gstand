@@ -4,20 +4,24 @@
 import { XrpcClient, FetchHandler, FetchHandlerOptions } from '@atproto/xrpc'
 import { schemas } from './lexicons'
 import { CID } from 'multiformats/cid'
-import * as AppGstandUnstableStoreItem from './types/app/gstand/unstable/store/item'
-import * as AppGstandUnstableStorePayment from './types/app/gstand/unstable/store/payment'
-import * as AppGstandUnstableStoreShop from './types/app/gstand/unstable/store/shop'
+import * as AppGstandStoreItem from './types/app/gstand/store/item'
+import * as AppGstandStorePayment from './types/app/gstand/store/payment'
+import * as AppGstandStoreShop from './types/app/gstand/store/shop'
+import * as ComAtprotoRepoStrongRef from './types/com/atproto/repo/strongRef'
 
-export * as AppGstandUnstableStoreItem from './types/app/gstand/unstable/store/item'
-export * as AppGstandUnstableStorePayment from './types/app/gstand/unstable/store/payment'
-export * as AppGstandUnstableStoreShop from './types/app/gstand/unstable/store/shop'
+export * as AppGstandStoreItem from './types/app/gstand/store/item'
+export * as AppGstandStorePayment from './types/app/gstand/store/payment'
+export * as AppGstandStoreShop from './types/app/gstand/store/shop'
+export * as ComAtprotoRepoStrongRef from './types/com/atproto/repo/strongRef'
 
 export class AtpBaseClient extends XrpcClient {
   app: AppNS
+  com: ComNS
 
   constructor(options: FetchHandler | FetchHandlerOptions) {
     super(options, schemas)
     this.app = new AppNS(this)
+    this.com = new ComNS(this)
   }
 
   /** @deprecated use `this` instead */
@@ -38,25 +42,15 @@ export class AppNS {
 
 export class AppGstandNS {
   _client: XrpcClient
-  unstable: AppGstandUnstableNS
+  store: AppGstandStoreNS
 
   constructor(client: XrpcClient) {
     this._client = client
-    this.unstable = new AppGstandUnstableNS(client)
+    this.store = new AppGstandStoreNS(client)
   }
 }
 
-export class AppGstandUnstableNS {
-  _client: XrpcClient
-  store: AppGstandUnstableStoreNS
-
-  constructor(client: XrpcClient) {
-    this._client = client
-    this.store = new AppGstandUnstableStoreNS(client)
-  }
-}
-
-export class AppGstandUnstableStoreNS {
+export class AppGstandStoreNS {
   _client: XrpcClient
   item: ItemRecord
   shop: ShopRecord
@@ -79,10 +73,10 @@ export class ItemRecord {
     params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
   ): Promise<{
     cursor?: string
-    records: { uri: string; value: AppGstandUnstableStoreItem.Record }[]
+    records: { uri: string; value: AppGstandStoreItem.Record }[]
   }> {
     const res = await this._client.call('com.atproto.repo.listRecords', {
-      collection: 'app.gstand.unstable.store.item',
+      collection: 'app.gstand.store.item',
       ...params,
     })
     return res.data
@@ -90,13 +84,9 @@ export class ItemRecord {
 
   async get(
     params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
-  ): Promise<{
-    uri: string
-    cid: string
-    value: AppGstandUnstableStoreItem.Record
-  }> {
+  ): Promise<{ uri: string; cid: string; value: AppGstandStoreItem.Record }> {
     const res = await this._client.call('com.atproto.repo.getRecord', {
-      collection: 'app.gstand.unstable.store.item',
+      collection: 'app.gstand.store.item',
       ...params,
     })
     return res.data
@@ -107,14 +97,14 @@ export class ItemRecord {
       ComAtprotoRepoCreateRecord.InputSchema,
       'collection' | 'record'
     >,
-    record: AppGstandUnstableStoreItem.Record,
+    record: AppGstandStoreItem.Record,
     headers?: Record<string, string>,
   ): Promise<{ uri: string; cid: string }> {
-    record.$type = 'app.gstand.unstable.store.item'
+    record.$type = 'app.gstand.store.item'
     const res = await this._client.call(
       'com.atproto.repo.createRecord',
       undefined,
-      { collection: 'app.gstand.unstable.store.item', ...params, record },
+      { collection: 'app.gstand.store.item', ...params, record },
       { encoding: 'application/json', headers },
     )
     return res.data
@@ -127,7 +117,7 @@ export class ItemRecord {
     await this._client.call(
       'com.atproto.repo.deleteRecord',
       undefined,
-      { collection: 'app.gstand.unstable.store.item', ...params },
+      { collection: 'app.gstand.store.item', ...params },
       { headers },
     )
   }
@@ -144,10 +134,10 @@ export class ShopRecord {
     params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
   ): Promise<{
     cursor?: string
-    records: { uri: string; value: AppGstandUnstableStoreShop.Record }[]
+    records: { uri: string; value: AppGstandStoreShop.Record }[]
   }> {
     const res = await this._client.call('com.atproto.repo.listRecords', {
-      collection: 'app.gstand.unstable.store.shop',
+      collection: 'app.gstand.store.shop',
       ...params,
     })
     return res.data
@@ -155,13 +145,9 @@ export class ShopRecord {
 
   async get(
     params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
-  ): Promise<{
-    uri: string
-    cid: string
-    value: AppGstandUnstableStoreShop.Record
-  }> {
+  ): Promise<{ uri: string; cid: string; value: AppGstandStoreShop.Record }> {
     const res = await this._client.call('com.atproto.repo.getRecord', {
-      collection: 'app.gstand.unstable.store.shop',
+      collection: 'app.gstand.store.shop',
       ...params,
     })
     return res.data
@@ -172,14 +158,14 @@ export class ShopRecord {
       ComAtprotoRepoCreateRecord.InputSchema,
       'collection' | 'record'
     >,
-    record: AppGstandUnstableStoreShop.Record,
+    record: AppGstandStoreShop.Record,
     headers?: Record<string, string>,
   ): Promise<{ uri: string; cid: string }> {
-    record.$type = 'app.gstand.unstable.store.shop'
+    record.$type = 'app.gstand.store.shop'
     const res = await this._client.call(
       'com.atproto.repo.createRecord',
       undefined,
-      { collection: 'app.gstand.unstable.store.shop', ...params, record },
+      { collection: 'app.gstand.store.shop', ...params, record },
       { encoding: 'application/json', headers },
     )
     return res.data
@@ -192,8 +178,36 @@ export class ShopRecord {
     await this._client.call(
       'com.atproto.repo.deleteRecord',
       undefined,
-      { collection: 'app.gstand.unstable.store.shop', ...params },
+      { collection: 'app.gstand.store.shop', ...params },
       { headers },
     )
+  }
+}
+
+export class ComNS {
+  _client: XrpcClient
+  atproto: ComAtprotoNS
+
+  constructor(client: XrpcClient) {
+    this._client = client
+    this.atproto = new ComAtprotoNS(client)
+  }
+}
+
+export class ComAtprotoNS {
+  _client: XrpcClient
+  repo: ComAtprotoRepoNS
+
+  constructor(client: XrpcClient) {
+    this._client = client
+    this.repo = new ComAtprotoRepoNS(client)
+  }
+}
+
+export class ComAtprotoRepoNS {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
   }
 }

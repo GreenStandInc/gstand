@@ -18,10 +18,8 @@ test("create", () => {
 test("get", async () => {
   const i = Image.create({data: Buffer.from([1,2,3])});
   const k = await Image.insert(db, i);
-  expect(k).toHaveLength(1);
-  expect(k[0].insertId).toBeDefined();
-  const o = await Image.get(db, (k[0].insertId as bigint));
-  expect(o.id?.toString()).toEqual(k[0].insertId?.toString());
+  const o = await Image.get(db, (k.insertId as bigint));
+  expect(o.id?.toString()).toEqual(k.insertId?.toString());
   expect(o.data).toEqual(i.data);
   expect(o.type).toEqual(i.type);
 })

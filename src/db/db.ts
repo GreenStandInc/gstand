@@ -4,12 +4,12 @@ import SQLiteDb from 'better-sqlite3';
 import { z } from 'zod';
 import * as Item from './item';
 import * as Image from './image';
-
-const recordPrefix = "app.gstand.unstable";
+import * as Shop from './shop';
 
 const { Pool } = pg;
 
 export type DatabaseSchema = {
+  shop: Shop.Table,
   image: Image.Table,
   item: Item.Table,
   auth_session: AuthSession,
@@ -55,6 +55,15 @@ const migrations = (dbType: string): Record<string, Migration> => {
           .addColumn('updatedAt', 'integer', (col) => col.notNull())
           .execute();
 
+        await db.schema.createTable('shop')
+          .addColumn('uri', 'varchar', (col) => col.primaryKey())
+          .addColumn('name', 'varchar', (col) => col.notNull())
+          .addColumn('banner', 'varchar', (col) => col.notNull())
+          .addColumn('item', 'varchar', (col) => col.notNull())
+          .addColumn('createdAt', 'integer', (col) => col.notNull())
+          .addColumn('updatedAt', 'integer', (col) => col.notNull())
+          .execute();
+
         await db.schema.createTable('auth_session')
           .addColumn('key', 'varchar', (col) => col.primaryKey())
           .addColumn('session', 'varchar', (col) => col.notNull())
@@ -68,6 +77,7 @@ const migrations = (dbType: string): Record<string, Migration> => {
       async down(db: Kysely<unknown>) {
         await db.schema.dropTable('auth_state').execute();
         await db.schema.dropTable('auth_session').execute();
+        await db.schema.dropTable('shop').execute();
         await db.schema.dropTable('item').execute();
         await db.schema.dropTable('image').execute();
       },

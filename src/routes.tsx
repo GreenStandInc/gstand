@@ -103,7 +103,7 @@ export const server = new Hono()
     try {
       i.uri = uri;
       i.sellerDid = agent.assertDid;
-      const [{ insertId }] = await Item.insert(db, i);
+      const { insertId } = await Item.insert(db, i);
       ret = await Item.get(db, uri);
     } catch (e) {
       if (env.loglevel !== "none") {

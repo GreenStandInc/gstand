@@ -1,1 +1,1 @@
-export const recordPrefix = "app.gstand.unstable";
+export const recordPrefix = "app.gstand";

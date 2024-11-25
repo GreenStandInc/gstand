@@ -4,9 +4,9 @@
 import { LexiconDoc, Lexicons } from '@atproto/lexicon'
 
 export const schemaDict = {
-  AppGstandUnstableStoreItem: {
+  AppGstandStoreItem: {
     lexicon: 1,
-    id: 'app.gstand.unstable.store.item',
+    id: 'app.gstand.store.item',
     defs: {
       main: {
         type: 'record',
@@ -42,7 +42,7 @@ export const schemaDict = {
               description: 'Prices for the item',
               items: {
                 type: 'ref',
-                ref: 'lex:app.gstand.unstable.store.payment',
+                ref: 'lex:app.gstand.store.payment',
               },
             },
             createdAt: {
@@ -58,9 +58,9 @@ export const schemaDict = {
       },
     },
   },
-  AppGstandUnstableStorePayment: {
+  AppGstandStorePayment: {
     lexicon: 1,
-    id: 'app.gstand.unstable.store.payment',
+    id: 'app.gstand.store.payment',
     defs: {
       main: {
         type: 'object',
@@ -80,9 +80,9 @@ export const schemaDict = {
       },
     },
   },
-  AppGstandUnstableStoreShop: {
+  AppGstandStoreShop: {
     lexicon: 1,
-    id: 'app.gstand.unstable.store.shop',
+    id: 'app.gstand.store.shop',
     defs: {
       main: {
         type: 'record',
@@ -102,9 +102,30 @@ export const schemaDict = {
               type: 'array',
               items: {
                 type: 'ref',
-                ref: 'lex:app.gstand.unstable.store.item',
+                ref: 'lex:com.atproto.repo.strongRef',
               },
             },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoRepoStrongRef: {
+    lexicon: 1,
+    id: 'com.atproto.repo.strongRef',
+    description: 'A URI with a content-hash fingerprint.',
+    defs: {
+      main: {
+        type: 'object',
+        required: ['uri', 'cid'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
           },
         },
       },
@@ -115,7 +136,8 @@ export const schemaDict = {
 export const schemas = Object.values(schemaDict)
 export const lexicons: Lexicons = new Lexicons(schemas)
 export const ids = {
-  AppGstandUnstableStoreItem: 'app.gstand.unstable.store.item',
-  AppGstandUnstableStorePayment: 'app.gstand.unstable.store.payment',
-  AppGstandUnstableStoreShop: 'app.gstand.unstable.store.shop',
+  AppGstandStoreItem: 'app.gstand.store.item',
+  AppGstandStorePayment: 'app.gstand.store.payment',
+  AppGstandStoreShop: 'app.gstand.store.shop',
+  ComAtprotoRepoStrongRef: 'com.atproto.repo.strongRef',
 }

@@ -32,7 +32,7 @@ export const create = ({
 export const insert = async (db: Database, image: Image) => {
   return await db.insertInto('image')
     .values({ type: image.type, data: image.data })
-    .execute();
+    .executeTakeFirstOrThrow();
 }
 
 export const get = async (db: Database, key: bigint): Promise<Image> => {

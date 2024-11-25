@@ -1,7 +1,7 @@
 import { recordPrefix } from "./record";
 import * as Image from './image';
-import * as ItemRecord from '#/lexicon/types/app/gstand/unstable/store/item.ts';
-import * as Payment from "#/lexicon/types/app/gstand/unstable/store/payment.ts";
+import * as ItemRecord from '#/lexicon/types/app/gstand/store/item.ts';
+import * as Payment from "#/lexicon/types/app/gstand/store/payment.ts";
 import type { Database } from "./db";
 import type { BlobRef } from "@atproto/lexicon";
 
@@ -82,17 +82,15 @@ export const create = ({
   image?: Array<Image.Image>,
   createdAt?: Date,
   updatedAt?: Date,
-} = {}): Item => {
-  return {
-    uri,
-    sellerDid,
-    name,
-    description,
-    image,
-    createdAt,
-    updatedAt,
-  }
-}
+} = {}): Item => ({
+  uri,
+  sellerDid,
+  name,
+  description,
+  image,
+  createdAt,
+  updatedAt,
+});
 
 export const insert = async (db: Database, item: Item) => {
   return await db.transaction().execute(async (trx) => {
@@ -106,13 +104,9 @@ export const insert = async (db: Database, item: Item) => {
         updatedAt: item.updatedAt.getTime(),
         image: JSON.stringify(imageIds)
       })
-      .execute();
+      //.onConflict((oc) => oc.doNothing())
+      .executeTakeFirstOrThrow();
   })
-  // TODO, add ability to auto update, using:
-  // .onConflict((oc) => oc.column('uri').doUpdateSet({
-  //   name: rec.name,
-  //   description: rec.description,
-  // }))
   // Note that you'll _also_ have to handle deleting images.
 }
 

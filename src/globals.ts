@@ -4,7 +4,7 @@ import * as env from '#/env';
 import { createSQLiteDb, createPostgresDb } from './db/db';
 import { createClient } from './auth/client';
 import type { NodeOAuthClient } from '@atproto/oauth-client-node';
-import * as ItemRecord from '#/lexicon/types/app/gstand/unstable/store/item.ts';
+import * as ItemRecord from '#/lexicon/types/app/gstand/store/item.ts';
 import * as Item from '#/db/item.ts';
 
 export const db = env.dbType === "sqlite" ?

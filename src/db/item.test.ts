@@ -7,7 +7,7 @@ import * as Item from "./item.ts";
 import * as Image from "./image.ts";
 import { beforeAll, describe, expect, test } from '@jest/globals';
 import { Database } from './db.ts';
-import * as ItemRecord from '#/lexicon/types/app/gstand/unstable/store/item.ts'
+import * as ItemRecord from '#/lexicon/types/app/gstand/store/item.ts'
 
 let db: Database;
 
@@ -43,9 +43,17 @@ test('toClient', () => {
 test('insert', async () => {
   const i = Item.create({ uri: "insertTest" });
   const res = await Item.insert(db, i);
-  expect(res).toHaveLength(1);
-  expect(res[0].numInsertedOrUpdatedRows).toEqual(1n);
+  expect(res.numInsertedOrUpdatedRows).toEqual(1n);
 });
+
+test("doubleInsert", async () => {
+  const item = Item.create({ uri: "doubleInsertTest", name: "itemName" });
+  const differentItem = Item.create({ uri: "doubleInsertTest", name: "differentName" });
+  await Item.insert(db, item);
+  // TODO, should this error?
+  // await Item.insert(db, item);
+  expect(async () => await Item.insert(db, differentItem)).rejects.toThrow();
+})
 
 test('query', async () => {
   const i = Item.create({ uri: "queryTest", });
